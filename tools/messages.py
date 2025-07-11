@@ -594,6 +594,37 @@ def outlookMail_reply_all(message_id: str, comment: str):
         logger.error(f"Could not reply all to Outlook message at {url}: {e}")
         return {"error": f"Could not reply all to Outlook message at {url}"}
 
+def outlookMail_send_draft(message_id: str):
+    """
+    Send an existing draft Outlook mail message by message ID.
+
+    Args:
+        message_id (str): The ID of the draft message to send.
+
+    Returns:
+        dict: Empty response if successful, or error details.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}/send"
+
+    try:
+        response = requests.post(url, headers=client['headers'])
+        if response.status_code == 202 or response.status_code == 200 or response.status_code == 204:
+            logger.info("Draft sent successfully")
+            return {"success": "Draft sent successfully"}
+        else:
+            try:
+                return response.json()
+            except Exception:
+                return {"error": f"Unexpected response: {response.status_code}"}
+    except Exception as e:
+        logger.error(f"Could not send Outlook draft message at {url}: {e}")
+        return {"error": f"Could not send Outlook draft message at {url}"}
+
 
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
