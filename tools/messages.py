@@ -145,7 +145,60 @@ def outlookMail_create_draft(subject: str, body_content: str, to_recipients: lis
     # Build recipient list in required format
     recipients = [
         {"emailAddress": {"address": email}}
-        for email in json.loads(to_recipients)
+        for email in to_recipients
+    ]
+
+    payload = {
+        "subject": subject,
+        "importance": importance,
+        "body": {
+            "contentType": "HTML",
+            "content": body_content
+        },
+        "toRecipients": recipients
+    }
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        logger.info("Created draft Outlook mail message")
+        return response.json()
+    except Exception as e:
+        logger.error(f"Could not create Outlook draft message at {url}: {e}")
+        return {"error": f"Could not create Outlook draft message at {url}"}
+
+def outlookMail_create_draft_in_folder(folder_id : str, subject: str, body_content: str, to_recipients: list, importance: str = "Normal"):
+    """
+    Create a draft Outlook mail message in specific folder in the signed-in user's mailbox.
+
+    Args:
+        folder_id (str):
+            The unique ID of the Outlook mail folder to retrieve messages from.
+            Example: 'AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAAD...'
+        subject (str): The subject of the draft email.
+        body_content (str): The HTML content of the email body.
+        to_recipients (list): List of recipient email addresses as strings.
+                              Example: ["someone@example.com", "another@example.com"]
+        importance (str, optional): Importance level ("Low", "Normal", "High"). Defaults to "Normal".
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with the created draft's details,
+              or an error message if the request fails.
+
+    Notes:
+        - Requires an authenticated Outlook client.
+        - The draft won't be sent automatically; it's saved in the Drafts folder.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}/messages"
+
+    # Build recipient list in required format
+    recipients = [
+        {"emailAddress": {"address": email}}
+        for email in to_recipients
     ]
 
     payload = {
@@ -170,11 +223,23 @@ def outlookMail_create_draft(subject: str, body_content: str, to_recipients: lis
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
     #print(outlookMail_list_messages_from_folder(folder_id='AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA'))
+    '''
     draft = outlookMail_create_draft(
-        subject="Test draft from API",
+        subject="Test draft",
         body_content="<p>Hello, this is a draft.</p>",
-        to_recipients='["mayank.msj.singh@gmail.com"]'
+        to_recipients=["mayank.msj.singh@gmail.com"]
     )
     print(draft)
+    '''
+    '''
+    draft = outlookMail_create_draft_in_folder(
+        folder_id='AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA',
+        subject="Test draft",
+        body_content="<p>Hello, this is a draft.</p>",
+        to_recipients=["mayank.msj.singh@gmail.com"]
+    )
+    print(draft)
+    '''
+
 
     pass
