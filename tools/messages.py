@@ -416,6 +416,39 @@ def outlookMail_create_reply_draft(message_id: str, comment: str):
         logger.error(f"Could not create Outlook reply draft message at {url}: {e}")
         return {"error": f"Could not create Outlook reply draft message at {url}"}
 
+
+def outlookMail_create_reply_all_draft(message_id: str, comment: str = ""):
+    """
+    Create a reply-all draft to an existing Outlook message.
+
+    Args:
+        message_id (str): The ID of the message you want to reply to.
+        comment (str, optional): Text to include in the reply body.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with the draft details,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()  # reuse your existing token logic
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}/createReplyAll"
+
+    payload = {
+        "comment": comment
+    }
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        logger.info("Created reply-all draft Outlook mail message")
+        return response.json()
+    except Exception as e:
+        logger.error(f"Could not create reply-all draft at {url}: {e}")
+        return {"error": f"Could not create reply-all draft at {url}"}
+
+
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
     print(outlookMail_list_messages_from_folder(folder_id='AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA'))
