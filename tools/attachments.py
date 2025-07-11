@@ -113,3 +113,48 @@ def outlookMail_delete_attachment(message_id: str, attachment_id: str):
     except Exception as e:
         logging.error(f"Could not delete attachment at {url}: {e}")
         return {"error": f"Could not delete attachment at {url}"}
+
+def outlookMail_add_attachment(message_id: str, file_path: str, attachment_name: str = None):
+    """
+    Add an attachment to a draft Outlook mail message.
+
+    Args:
+        message_id (str): The ID of the draft message.
+        file_path (str): Path to the local file to attach.
+        attachment_name (str, optional): Name for the attachment as it will appear in mail.
+                                         Defaults to the file's basename.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with attachment details,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()  # your existing auth helper
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    if not attachment_name:
+        attachment_name = file_path.split("/")[-1]
+
+    url = f"{client['base_url']}/me/messages/{message_id}/attachments"
+
+    try:
+        # Read file and encode as base64
+        with open(file_path, "rb") as f:
+            content_bytes = base64.b64encode(f.read()).decode("utf-8")
+
+        payload = {
+            "@odata.type": "#microsoft.graph.fileAttachment",
+            "name": attachment_name,
+            "contentBytes": content_bytes
+        }
+
+        response = requests.post(url, headers=client['headers'], json=payload)
+        response.raise_for_status()
+
+        logging.info("Added attachment to Outlook draft message")
+        return response.json()
+
+    except Exception as e:
+        logging.error(f"Could not add attachment to Outlook draft message at {url}: {e}")
+        return {"error": f"Could not add attachment to Outlook draft message at {url}"}
