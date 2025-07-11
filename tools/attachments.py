@@ -3,6 +3,7 @@ import logging
 from typing import Tuple, Union, Dict, Any
 from base import get_onedrive_client
 import base64
+import os
 
 # Configure logging
 logger = logging.getLogger(__name__)
