@@ -305,9 +305,87 @@ def outlookMail_delete_draft(message_id: str):
         logger.error(f"Could not delete Outlook draft message at {url}: {e}")
         return {"error": f"Could not delete Outlook draft message at {url}"}
 
+def outlookMail_copy_message(message_id: str, destination_folder_id: str):
+    """
+    Copy an existing Outlook draft message by message ID.
+
+    Args:
+        message_id (str): The ID of the draft message to Delete.
+        folder_id (str): The ID of the destination folder.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with updated draft details,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}"
+    payload = {
+  "destinationId": destination_folder_id,
+}
+
+    try:
+        logger.info(f"Coping draft Outlook mail message at {url}")
+        response = requests.delete(url, headers=client['headers'], json=payload)
+        if response.status_code == 204:
+            logger.info("Copied draft Outlook mail message successfully")
+            return "Copied"
+        else:
+            logger.warning(f"Unexpected status code: {response.status_code}")
+            # try to parse error if there is one
+            try:
+                error_response = response.json()
+                logger.error(f"Copy failed with response: {error_response}")
+                return error_response
+            except Exception as parse_error:
+                logger.error(f"Could not parse error response: {parse_error}")
+                return {"error": f"Unexpected response: {response.status_code}"}
+    except Exception as e:
+        logger.error(f"Could not copy Outlook draft message at {url}: {e}")
+        return {"error": f"Could not copy Outlook draft message at {url}"}
+
+def outlookMail_create_forward_draft(message_id: str, comment: str, to_recipients: list):
+    """
+    Create a draft forward message for an existing Outlook message.
+
+    Args:
+        message_id (str): ID of the original message to forward.
+        comment (str): Comment to include in the forwarded message.
+        to_recipients (list): List of recipient email addresses as strings.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with the created draft forward's details,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()  # same method you used to get your client and headers
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}/createForward"
+
+    # Build recipient list in required format
+    recipients = [{"emailAddress": {"address": email}} for email in to_recipients]
+
+    payload = {
+        "comment": comment,
+        "toRecipients": recipients
+    }
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        logger.info("Created draft forward Outlook mail message")
+        return response.json()
+    except Exception as e:
+        logger.error(f"Could not create Outlook forward draft message at {url}: {e}")
+        return {"error": f"Could not create Outlook forward draft message at {url}"}
+
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
-    #print(outlookMail_list_messages_from_folder(folder_id='AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA'))
+    print(outlookMail_list_messages_from_folder(folder_id='AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA'))
     '''
     draft = outlookMail_create_draft(
         subject="Test draft",
@@ -350,5 +428,5 @@ if __name__ == "__main__":
     print(result)
     '''
     #print(outlookMail_delete_draft("AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgBGAAADb25xEWuFWEWCX6SpYNrvPwcAp93M14k-O06xyivtWYvXZgAAAgEPAAAAp93M14k-O06xyivtWYvXZgAAAn1rAAAA"))
-
+    #print(outlookMail_copy_message('AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgBGAAADb25xEWuFWEWCX6SpYNrvPwcAp93M14k-O06xyivtWYvXZgAAAgEPAAAAp93M14k-O06xyivtWYvXZgAAAn1sAAAA','AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA'))
     pass
