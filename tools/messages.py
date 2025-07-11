@@ -486,6 +486,39 @@ def outlookMail_forward_message(message_id: str, to_recipients: list, comment: s
         logger.error(f"Could not forward Outlook message at {url}: {e}")
         return {"error": f"Could not forward Outlook message at {url}"}
 
+def outlookMail_move_message(message_id: str, destination_folder_id: str):
+    """
+    Move an Outlook mail message to another folder.
+
+    Args:
+        message_id (str): ID of the message to move.
+        destination_folder_id (str): ID of the target folder.
+                                     Example: 'deleteditems' or actual folder ID.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with moved message details,
+              or an error message if it fails.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}/move"
+
+    payload = {
+        "destinationId": destination_folder_id
+    }
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        logger.info(f"Moved Outlook mail message to folder {destination_folder_id}")
+        return response.json()
+    except Exception as e:
+        logger.error(f"Could not move Outlook mail message at {url}: {e}")
+        return {"error": f"Could not move Outlook mail message at {url}"}
+
+
 
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
