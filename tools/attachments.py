@@ -228,3 +228,30 @@ def outlookMail_upload_large_attachment(message_id: str, file_path: str, is_inli
     except Exception as e:
         logger.error(f"Could not upload attachment: {e}")
         return {"error": f"Could not upload attachment: {e}"}
+
+def outlookMail_list_attachments(message_id: str) -> dict:
+    """
+    List attachments from an Outlook mail message.
+
+    Args:
+        message_id (str): The ID of the message to list attachments from.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with the list of attachments,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()  # same client used for other Outlook calls
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}/attachments"
+
+    try:
+        response = requests.get(url, headers=client['headers'])
+        response.raise_for_status()
+        logging.info(f"Fetched attachments for message {message_id}")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not list attachments at {url}: {e}")
+        return {"error": f"Could not list attachments at {url}: {e}"}
