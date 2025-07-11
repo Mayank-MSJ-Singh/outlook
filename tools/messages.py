@@ -625,6 +625,38 @@ def outlookMail_send_draft(message_id: str):
         logger.error(f"Could not send Outlook draft message at {url}: {e}")
         return {"error": f"Could not send Outlook draft message at {url}"}
 
+def outlookMail_permanent_delete(user_id: str, message_id: str):
+    """
+    Permanently delete a message by message ID for a specific user.
+
+    Args:
+        user_id (str): The ID or UPN (email) of the user.
+        message_id (str): The ID of the message to permanently delete.
+
+    Returns:
+        dict: Success or error info.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/users/{user_id}/messages/{message_id}/permanentDelete"
+
+    try:
+        response = requests.post(url, headers=client['headers'])
+        if response.status_code in [200, 202, 204]:
+            logger.info("Message permanently deleted")
+            return {"success": "Message permanently deleted"}
+        else:
+            try:
+                return response.json()
+            except Exception:
+                return {"error": f"Unexpected response: {response.status_code}"}
+    except Exception as e:
+        logger.error(f"Could not permanently delete message at {url}: {e}")
+        return {"error": f"Could not permanently delete message at {url}"}
+
 
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
