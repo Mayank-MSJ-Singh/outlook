@@ -383,6 +383,39 @@ def outlookMail_create_forward_draft(message_id: str, comment: str, to_recipient
         logger.error(f"Could not create Outlook forward draft message at {url}: {e}")
         return {"error": f"Could not create Outlook forward draft message at {url}"}
 
+def outlookMail_create_reply_draft(message_id: str, comment: str):
+    """
+    Create a draft reply message to an existing Outlook message.
+
+    Args:
+        message_id (str): ID of the original message to reply to.
+        comment (str): Comment to include in the reply.
+
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with the created draft reply's details,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}/createReply"
+
+    payload = {
+        "comment": comment
+    }
+
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        logger.info("Created draft reply Outlook mail message")
+        return response.json()
+    except Exception as e:
+        logger.error(f"Could not create Outlook reply draft message at {url}: {e}")
+        return {"error": f"Could not create Outlook reply draft message at {url}"}
+
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
     print(outlookMail_list_messages_from_folder(folder_id='AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA'))
