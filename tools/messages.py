@@ -448,6 +448,44 @@ def outlookMail_create_reply_all_draft(message_id: str, comment: str = ""):
         logger.error(f"Could not create reply-all draft at {url}: {e}")
         return {"error": f"Could not create reply-all draft at {url}"}
 
+def outlookMail_forward_message(message_id: str, to_recipients: list, comment: str = ""):
+    """
+    Forward an Outlook message by message ID.
+
+    Args:
+        message_id (str): ID of the message to forward.
+        to_recipients (list): List of email addresses to forward to.
+        comment (str, optional): Comment to include above the forwarded message.
+
+    Returns:
+        dict: JSON response or error.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}/forward"
+
+    recipients = [{"emailAddress": {"address": email}} for email in to_recipients]
+
+    payload = {
+        "comment": comment,
+        "toRecipients": recipients
+    }
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        if response.status_code in (202, 200):
+            logger.info("Forwarded Outlook mail message")
+            return {"success": True}
+        else:
+            logger.error(f"Forward failed: {response.status_code} {response.text}")
+            return response.json()
+    except Exception as e:
+        logger.error(f"Could not forward Outlook message at {url}: {e}")
+        return {"error": f"Could not forward Outlook message at {url}"}
+
 
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
