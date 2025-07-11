@@ -5,6 +5,9 @@ from base import get_onedrive_client
 import base64
 import os
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
 def outlookMail_update_inference_override(override_id: str, classify_as: str = "focused") -> dict:
     """
     Update an existing inference classification override.
@@ -65,3 +68,28 @@ def outlookMail_delete_inference_override(override_id: str) -> str:
     except Exception as e:
         logging.error(f"Could not delete inference classification override at {url}: {e}")
         return f"Error: {e}"
+
+def outlookMail_list_inference_overrides() -> dict:
+    """
+    List all Focused Inbox overrides (inferenceClassification overrides)
+    for the signed-in user.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API containing the list of overrides,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()  # same client you use for other Outlook calls
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/inferenceClassification/overrides"
+
+    try:
+        response = requests.get(url, headers=client['headers'])
+        response.raise_for_status()
+        logger.info("Fetched Focused Inbox overrides")
+        return response.json()  # contains list of overrides; each has an 'id'
+    except Exception as e:
+        logger.error(f"Could not list overrides from {url}: {e}")
+        return {"error": f"Could not list overrides from {url}"}
