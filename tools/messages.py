@@ -267,6 +267,43 @@ def outlookMail_update_draft(message_id: str, subject: str = None, body_content:
         logger.error(f"Could not update Outlook draft message at {url}: {e}")
         return {"error": f"Could not update Outlook draft message at {url}"}
 
+def outlookMail_delete_draft(message_id: str):
+    """
+    Delete an existing Outlook draft message by message ID.
+
+    Args:
+        message_id (str): The ID of the draft message to Delete.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with updated draft details,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}"
+
+    try:
+        logger.info(f"Deleting draft Outlook mail message at {url}")
+        response = requests.delete(url, headers=client['headers'])
+        if response.status_code == 204:
+            logger.info("Deleted draft Outlook mail message successfully")
+            return "Deleted"
+        else:
+            logger.warning(f"Unexpected status code: {response.status_code}")
+            # try to parse error if there is one
+            try:
+                error_response = response.json()
+                logger.error(f"Delete failed with response: {error_response}")
+                return error_response
+            except Exception as parse_error:
+                logger.error(f"Could not parse error response: {parse_error}")
+                return {"error": f"Unexpected response: {response.status_code}"}
+    except Exception as e:
+        logger.error(f"Could not delete Outlook draft message at {url}: {e}")
+        return {"error": f"Could not delete Outlook draft message at {url}"}
 
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
@@ -279,6 +316,8 @@ if __name__ == "__main__":
     )
     print(draft)
     '''
+
+
     '''
     draft = outlookMail_create_draft_in_folder(
         folder_id='AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA',
@@ -299,5 +338,17 @@ if __name__ == "__main__":
     )
     print(result)
     '''
+    '''
+    draft_id = "AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgBGAAADb25xEWuFWEWCX6SpYNrvPwcAp93M14k-O06xyivtWYvXZgAAAgEPAAAAp93M14k-O06xyivtWYvXZgAAAn1oAAAA"
+
+    result = outlookMail_update_draft(
+            message_id=draft_id,
+            subject="Updated subject",
+            body_content="<p>Updated body content from API</p>",
+            importance="High"
+        )
+    print(result)
+    '''
+    #print(outlookMail_delete_draft("AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgBGAAADb25xEWuFWEWCX6SpYNrvPwcAp93M14k-O06xyivtWYvXZgAAAgEPAAAAp93M14k-O06xyivtWYvXZgAAAn1rAAAA"))
 
     pass
