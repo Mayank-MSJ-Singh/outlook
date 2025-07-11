@@ -49,40 +49,34 @@ def outlookMail_get_attachment(message_id: str, attachment_id: str, expand: str 
 
 def outlookMail_download_attachment(message_id: str, attachment_id: str, save_path: str):
     """
-    Download an attachment from an Outlook mail message and save it locally.
+    Download an attachment from Outlook mail as raw binary using $value.
 
     Args:
-        message_id (str): The ID of the message containing the attachment.
-        attachment_id (str): The ID of the attachment to download.
-        save_path (str): Local file path to save the downloaded attachment.
+        message_id (str): ID of the message that has the attachment.
+        attachment_id (str): ID of the attachment.
+        save_path (str): Local path to save the downloaded file.
 
     Returns:
-        str: Path to saved file if successful, or error message.
+        str: Path where the file is saved, or an error message.
     """
-    client = get_onedrive_client()  # same function you're using for other Outlook calls
+    client = get_onedrive_client()  # your usual client setup
     if not client:
         logging.error("Could not get Outlook client")
         return "Could not get Outlook client"
 
-    url = f"{client['base_url']}/me/messages/{message_id}/attachments/{attachment_id}"
+    url = f"{client['base_url']}/me/messages/{message_id}/attachments/{attachment_id}/$value"
 
     try:
         response = requests.get(url, headers=client['headers'])
         response.raise_for_status()
-        data = response.json()
 
-        # 'contentBytes' is base64 encoded
-        content_bytes = data.get("contentBytes")
-        if content_bytes:
-            file_data = base64.b64decode(content_bytes)
-            with open(save_path, "wb") as f:
-                f.write(file_data)
-            logging.info(f"Attachment saved to {save_path}")
-            return save_path
-        else:
-            logging.error(f"No contentBytes found in attachment: {attachment_id}")
-            return "Attachment does not have downloadable content"
+        with open(save_path, "wb") as f:
+            f.write(response.content)
+
+        logging.info(f"Attachment saved to {save_path}")
+        return save_path
 
     except Exception as e:
-        logging.error(f"Failed to download attachment at {url}: {e}")
+        logging.error(f"Failed to download attachment using $value at {url}: {e}")
         return f"Error: {e}"
+
