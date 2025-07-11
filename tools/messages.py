@@ -219,6 +219,54 @@ def outlookMail_create_draft_in_folder(folder_id : str, subject: str, body_conte
         logger.error(f"Could not create Outlook draft message at {url}: {e}")
         return {"error": f"Could not create Outlook draft message at {url}"}
 
+def outlookMail_update_draft(message_id: str, subject: str = None, body_content: str = None, to_recipients: list = None, importance: str = "Normal"):
+    """
+    Update an existing Outlook draft message by message ID.
+
+    Args:
+        message_id (str): The ID of the draft message to update.
+        subject (str, optional): New subject.
+        body_content (str, optional): New HTML content.
+        to_recipients (list, optional): New list of email addresses.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with updated draft details,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}"
+
+    payload = {}
+
+    if subject:
+        payload["subject"] = subject
+
+    if body_content:
+        payload["body"] = {
+            "contentType": "HTML",
+            "content": body_content
+        }
+
+    if to_recipients:
+        # make sure it's in the right format
+        recipients = [{"emailAddress": {"address": email}} for email in to_recipients]
+        payload["toRecipients"] = recipients
+
+    if importance:
+        payload["importance"] = importance
+
+    try:
+        response = requests.patch(url, headers=client['headers'], json=payload)
+        logger.info("Updated draft Outlook mail message")
+        return response.json()
+    except Exception as e:
+        logger.error(f"Could not update Outlook draft message at {url}: {e}")
+        return {"error": f"Could not update Outlook draft message at {url}"}
+
 
 if __name__ == "__main__":
     #print(outlookMail_list_messages(top = 1))
@@ -240,6 +288,16 @@ if __name__ == "__main__":
     )
     print(draft)
     '''
+    '''
+    draft_id = "AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgBGAAADb25xEWuFWEWCX6SpYNrvPwcAp93M14k-O06xyivtWYvXZgAAAgEPAAAAp93M14k-O06xyivtWYvXZgAAAn1oAAAA"
 
+    result = outlookMail_update_draft(
+        message_id=draft_id,
+        subject="Updated subject",
+        body_content="<p>Updated body content from API</p>",
+        importance="High"
+    )
+    print(result)
+    '''
 
     pass
