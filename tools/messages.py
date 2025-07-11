@@ -518,6 +518,51 @@ def outlookMail_move_message(message_id: str, destination_folder_id: str):
         logger.error(f"Could not move Outlook mail message at {url}: {e}")
         return {"error": f"Could not move Outlook mail message at {url}"}
 
+def outlookMail_send_reply_custom(message_id: str, comment: str, to_recipients: list):
+    """
+    Send a reply to an Outlook mail message, with custom recipients and names.
+
+    Args:
+        message_id (str): ID of the message to reply to.
+        comment (str): Text to include in the reply.
+        to_recipients (list): List of dicts like:
+            [{"name": "Samantha Booth", "address": "samanthab@contoso.com"}, ...]
+
+    Returns:
+        str: "Sent" if successful, or error message.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}/reply"
+
+    recipients = [
+        {"emailAddress": {"address": r["address"], "name": r["name"]}}
+        for r in to_recipients
+    ]
+
+    payload = {
+        "message": {
+            "toRecipients": recipients
+        },
+        "comment": comment
+    }
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        if response.status_code in [200, 202]:
+            logger.info(f"Replied (custom) to message {message_id}")
+            return "Sent"
+        else:
+            try:
+                return response.json()
+            except:
+                return {"error": f"Unexpected response: {response.status_code}"}
+    except Exception as e:
+        logger.error(f"Could not reply (custom) to Outlook mail message at {url}: {e}")
+        return {"error": f"Could not reply (custom) to Outlook mail message at {url}"}
 
 
 if __name__ == "__main__":
