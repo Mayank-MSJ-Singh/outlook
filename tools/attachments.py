@@ -80,3 +80,36 @@ def outlookMail_download_attachment(message_id: str, attachment_id: str, save_pa
         logging.error(f"Failed to download attachment using $value at {url}: {e}")
         return f"Error: {e}"
 
+def outlookMail_delete_attachment(message_id: str, attachment_id: str):
+    """
+    Delete an attachment from a draft Outlook mail message.
+
+    Args:
+        message_id (str): The ID of the message containing the attachment.
+        attachment_id (str): The ID of the attachment to delete.
+
+    Returns:
+        str or dict: "Deleted" if successful, or error message/details.
+    """
+    client = get_onedrive_client()  # your existing auth method
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/messages/{message_id}/attachments/{attachment_id}"
+    try:
+        response = requests.delete(url, headers=client['headers'])
+        if response.status_code == 204:
+            logging.info("Deleted attachment from Outlook draft message")
+            return "Deleted"
+        else:
+            try:
+                error = response.json()
+                logging.error(f"Failed to delete attachment: {error}")
+                return error
+            except Exception:
+                logging.error(f"Unexpected response: {response.status_code}")
+                return {"error": f"Unexpected response: {response.status_code}"}
+    except Exception as e:
+        logging.error(f"Could not delete attachment at {url}: {e}")
+        return {"error": f"Could not delete attachment at {url}"}
