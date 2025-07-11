@@ -158,3 +158,73 @@ def outlookMail_add_attachment(message_id: str, file_path: str, attachment_name:
     except Exception as e:
         logging.error(f"Could not add attachment to Outlook draft message at {url}: {e}")
         return {"error": f"Could not add attachment to Outlook draft message at {url}"}
+
+
+def outlookMail_upload_large_attachment(message_id: str, file_path: str, is_inline: bool = False, content_id: str = None) -> dict:
+    """
+    Upload a large file attachment to a draft message using an upload session.
+
+    Args:
+        message_id (str): ID of the draft message to attach the file to.
+        file_path (str): Local path to the file.
+        is_inline (bool, optional): If True, marks the attachment as inline. Defaults to False.
+        content_id (str, optional): Content-ID for inline images.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with final upload session result,
+              or an error message if the request fails.
+    """
+    client = get_onedrive_client()  # your existing method to get the client
+    if not client:
+        logger.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    file_name = os.path.basename(file_path)
+    file_size = os.path.getsize(file_path)
+
+    # Step 1: Create upload session
+    url = f"{client['base_url']}/me/messages/{message_id}/attachments/createUploadSession"
+    payload = {
+        "AttachmentItem": {
+            "attachmentType": "file",
+            "name": file_name,
+            "size": file_size,
+            "isInline": is_inline
+        }
+    }
+    if content_id:
+        payload["AttachmentItem"]["contentId"] = content_id
+
+    try:
+        session_res = requests.post(url, headers=client['headers'], json=payload)
+        session_res.raise_for_status()
+        upload_url = session_res.json().get("uploadUrl")
+        if not upload_url:
+            return {"error": "Upload session URL not found"}
+    except Exception as e:
+        logger.error(f"Could not create upload session: {e}")
+        return {"error": f"Could not create upload session: {e}"}
+
+    # Step 2: Upload the file in chunks
+    chunk_size = 3276800  # ~3.2 MB
+    try:
+        with open(file_path, "rb") as f:
+            file_pos = 0
+            while file_pos < file_size:
+                chunk = f.read(chunk_size)
+                start_byte = file_pos
+                end_byte = file_pos + len(chunk) - 1
+                headers = {
+                    "Content-Length": str(len(chunk)),
+                    "Content-Range": f"bytes {start_byte}-{end_byte}/{file_size}"
+                }
+                put_res = requests.put(upload_url, headers=headers, data=chunk)
+                put_res.raise_for_status()
+                file_pos += len(chunk)
+                logger.info(f"Uploaded bytes {start_byte}-{end_byte}")
+
+        logger.info("Large attachment uploaded successfully")
+        return put_res.json()  # final response
+    except Exception as e:
+        logger.error(f"Could not upload attachment: {e}")
+        return {"error": f"Could not upload attachment: {e}"}
