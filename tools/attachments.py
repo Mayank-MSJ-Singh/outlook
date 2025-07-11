@@ -114,7 +114,7 @@ def outlookMail_delete_attachment(message_id: str, attachment_id: str):
         logging.error(f"Could not delete attachment at {url}: {e}")
         return {"error": f"Could not delete attachment at {url}"}
 
-def outlookMail_add_attachment(message_id: str, file_path: str, attachment_name: str = None):
+def outlookMail_add_attachment(message_id: str, file_path: str, attachment_name: str = None) -> Union[Dict, str]:
     """
     Add an attachment to a draft Outlook mail message.
 
