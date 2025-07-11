@@ -2,6 +2,7 @@ import requests
 import logging
 from typing import Tuple, Union, Dict, Any
 from base import get_onedrive_client
+import base64
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -45,3 +46,43 @@ def outlookMail_get_attachment(message_id: str, attachment_id: str, expand: str 
     except Exception as e:
         logger.error(f"Could not get Outlook attachment at {url}: {e}")
         return {"error": f"Could not get Outlook attachment at {url}"}
+
+def outlookMail_download_attachment(message_id: str, attachment_id: str, save_path: str):
+    """
+    Download an attachment from an Outlook mail message and save it locally.
+
+    Args:
+        message_id (str): The ID of the message containing the attachment.
+        attachment_id (str): The ID of the attachment to download.
+        save_path (str): Local file path to save the downloaded attachment.
+
+    Returns:
+        str: Path to saved file if successful, or error message.
+    """
+    client = get_onedrive_client()  # same function you're using for other Outlook calls
+    if not client:
+        logging.error("Could not get Outlook client")
+        return "Could not get Outlook client"
+
+    url = f"{client['base_url']}/me/messages/{message_id}/attachments/{attachment_id}"
+
+    try:
+        response = requests.get(url, headers=client['headers'])
+        response.raise_for_status()
+        data = response.json()
+
+        # 'contentBytes' is base64 encoded
+        content_bytes = data.get("contentBytes")
+        if content_bytes:
+            file_data = base64.b64decode(content_bytes)
+            with open(save_path, "wb") as f:
+                f.write(file_data)
+            logging.info(f"Attachment saved to {save_path}")
+            return save_path
+        else:
+            logging.error(f"No contentBytes found in attachment: {attachment_id}")
+            return "Attachment does not have downloadable content"
+
+    except Exception as e:
+        logging.error(f"Failed to download attachment at {url}: {e}")
+        return f"Error: {e}"
