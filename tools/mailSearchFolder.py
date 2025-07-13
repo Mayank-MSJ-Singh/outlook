@@ -73,11 +73,12 @@ def outlookMail_list_child_folders(
         params["includeHiddenFolders"] = "true"
 
     try:
-        return params
-        #response = requests.get(url, headers=client['headers'], params=params)
-        #response.raise_for_status()
+        response = requests.get(url, headers=client['headers'], params=params)
+        response.raise_for_status()
         logging.info(f"Retrieved child folders for parent folder: {parent_folder_id}")
-        #return response.json()
+        return response.json()
     except Exception as e:
         logging.error(f"Could not get child folders from {url}: {e}")
         return {"error": f"Could not get child folders from {url}"}
+
+
