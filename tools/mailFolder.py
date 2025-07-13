@@ -303,3 +303,33 @@ def outlookMail_get_folder_delta(max_pagesize: int = 2) -> dict:
     except Exception as e:
         logging.error(f"Could not get folder delta from {url}: {e}")
         return {"error": f"Could not get folder delta from {url}"}
+
+def outlookMail_move_folder(folder_id: str, destination_id: str) -> dict:
+    """
+    Move an Outlook mail folder to another folder.
+
+    Args:
+        folder_id (str): The ID of the folder you want to move.
+        destination_id (str): The ID of the destination folder.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API or an error dict.
+    """
+    client = get_onedrive_client()  # reuse your existing authenticated client
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}/move"
+    payload = {
+        "destinationId": destination_id
+    }
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        response.raise_for_status()
+        logging.info("Moved Outlook mail folder")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not move Outlook mail folder at {url}: {e}")
+        return {"error": f"Could not move Outlook mail folder at {url}"}
