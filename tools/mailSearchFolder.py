@@ -201,3 +201,41 @@ def outlookMail_permanent_delete_mail_folder(folder_id: str) -> dict:
     except Exception as e:
         logging.error(f"Could not permanently delete mail folder at {url}: {e}")
         return {"error": f"Could not permanently delete mail folder at {url}"}
+
+def outlookMail_get_messages_from_folder(folder_id: str, top: int = 10, filter_query: str = None, orderby: str = None, select: str = None) -> dict:
+    """
+    Retrieve messages from a specific Outlook mail folder.
+
+    Args:
+        folder_id (str): The unique ID of the mail folder.
+        top (int, optional): Max number of messages to return (default: 10).
+        filter_query (str, optional): OData $filter expression (e.g., "isRead eq false").
+        orderby (str, optional): OData $orderby expression (e.g., "receivedDateTime desc").
+        select (str, optional): Comma-separated list of properties to include.
+
+    Returns:
+        dict: JSON response with list of messages, or error info.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}/messages"
+    params = {'$top': top}
+
+    if filter_query:
+        params['$filter'] = filter_query
+    if orderby:
+        params['$orderby'] = orderby
+    if select:
+        params['$select'] = select
+
+    try:
+        response = requests.get(url, headers=client['headers'], params=params)
+        response.raise_for_status()
+        logging.info(f"Retrieved messages from folder {folder_id}")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not get messages from {url}: {e}")
+        return {"error": f"Could not get messages from {url}"}
