@@ -106,3 +106,47 @@ def outlookMail_get_mail_folder(folder_id: str) -> dict:
     except Exception as e:
         logging.error(f"Could not get mail folder from {url}: {e}")
         return {"error": f"Could not get mail folder from {url}"}
+
+def outlookMail_update_mail_folder(folder_id: str,
+                                   displayName: str = None,
+                                   includeNestedFolders: bool = None,
+                                   sourceFolderIds: list = None,
+                                   filterQuery: str = None) -> dict:
+    """
+    Update a mail folder (typically a mailSearchFolder) in Outlook.
+
+    Args:
+        folder_id (str): The unique ID of the folder to update.
+        displayName (str, optional): New display name for the folder.
+        includeNestedFolders (bool, optional): Whether to do deep search (True) or shallow (False).
+        sourceFolderIds (list of str, optional): IDs of folders to be mined.
+        filterQuery (str, optional): OData filter to filter messages.
+
+    Returns:
+        dict: Updated folder object on success, or error info on failure.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}"
+
+    payload = {}
+    if displayName is not None:
+        payload["displayName"] = displayName
+    if includeNestedFolders is not None:
+        payload["includeNestedFolders"] = includeNestedFolders
+    if sourceFolderIds is not None:
+        payload["sourceFolderIds"] = sourceFolderIds
+    if filterQuery is not None:
+        payload["filterQuery"] = filterQuery
+
+    try:
+        response = requests.patch(url, headers=client['headers'], json=payload)
+        response.raise_for_status()
+        logging.info(f"Updated mail folder: {folder_id}")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not update mail folder at {url}: {e}")
+        return {"error": f"Could not update mail folder at {url}"}
