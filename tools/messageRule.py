@@ -370,5 +370,32 @@ def outlookMail_update_message_rule(
         logging.error(f"Could not update Outlook message rule at {url}: {e}")
         return {"error": f"Could not update Outlook message rule at {url}"}
 
+def outlookMail_delete_message_rule(rule_id: str) -> dict:
+    """
+    Delete an Outlook message rule from the inbox using Microsoft Graph API.
+
+    Args:
+        rule_id (str): ID of the message rule to delete.
+
+    Returns:
+        dict: {"status": "Deleted"} on success, or {"error": "..."} on failure.
+    """
+
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/inbox/messageRules/{rule_id}"
+
+    try:
+        response = requests.delete(url, headers=client['headers'])
+        response.raise_for_status()
+        logging.info(f"Deleted Outlook message rule: {rule_id}")
+        return {"status": "Deleted"}
+    except Exception as e:
+        logging.error(f"Could not delete Outlook message rule at {url}: {e}")
+        return {"error": f"Could not delete Outlook message rule at {url}"}
+
 if  __name__ == "__main__":
     print(outlookMail_create_message_rule())
