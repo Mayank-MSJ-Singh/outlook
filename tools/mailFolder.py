@@ -187,3 +187,31 @@ def outlookMail_list_messages_from_folder(folder_id: str, top: int = 10) -> dict
     except Exception as e:
         logging.error(f"Failed to fetch messages from {url}: {e}")
         return {"error": f"Failed to fetch messages from {url}"}
+
+def outlookMail_update_folder_display_name(folder_id: str, display_name: str) -> dict:
+    """
+    Update the display name of an Outlook mail folder.
+
+    Args:
+        folder_id (str): ID of the mail folder to update.
+        display_name (str): New display name.
+
+    Returns:
+        dict: JSON response on success, or error details.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}"
+    payload = {"displayName": display_name}
+
+    try:
+        response = requests.patch(url, headers=client['headers'], json=payload)
+        response.raise_for_status()
+        logging.info(f"Updated folder {folder_id} display name to '{display_name}'")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Failed to update folder at {url}: {e}")
+        return {"error": f"Failed to update folder at {url}"}
