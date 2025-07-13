@@ -187,9 +187,9 @@ def outlookMail_create_message_rule(displayName : str = None,
         "exceptions": exceptions,
     }
 
-    for i in args:
-        if args[i] is not None:
-            payload[i] = args[i]
+    for key, value in args.items():
+        if value is not None:
+            payload[key] = value
 
     try:
         response = requests.post(url, headers=client['headers'], json=payload)
