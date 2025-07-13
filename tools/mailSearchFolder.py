@@ -1,0 +1,49 @@
+import requests
+import logging
+from base import get_onedrive_client
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+def outlookMail_create_search_folder(parent_folder_id: str,
+                                     display_name: str,
+                                     include_nested_folders: bool,
+                                     source_folder_ids: list,
+                                     filter_query: str) -> dict:
+    """
+    Create a new mail search folder under a specified parent folder.
+
+    Args:
+        parent_folder_id (str): ID of the parent mail folder.
+        display_name (str): Display name for the search folder.
+        include_nested_folders (bool): Whether to include subfolders.
+        source_folder_ids (list): List of folder IDs to search.
+        filter_query (str): OData filter query string.
+
+    Returns:
+        dict: Created search folder info on success, or error dict on failure.
+    """
+
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{parent_folder_id}/childFolders"
+
+    payload = {
+        "@odata.type": "microsoft.graph.mailSearchFolder",
+        "displayName": display_name,
+        "includeNestedFolders": include_nested_folders,
+        "sourceFolderIds": source_folder_ids,
+        "filterQuery": filter_query
+    }
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        response.raise_for_status()
+        logging.info(f"Created search folder: {display_name}")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not create search folder at {url}: {e}")
+        return {"error": f"Could not create search folder at {url}"}
