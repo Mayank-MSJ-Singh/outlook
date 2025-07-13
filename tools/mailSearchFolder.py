@@ -47,3 +47,37 @@ def outlookMail_create_search_folder(parent_folder_id: str,
     except Exception as e:
         logging.error(f"Could not create search folder at {url}: {e}")
         return {"error": f"Could not create search folder at {url}"}
+
+def outlookMail_list_child_folders(
+    parent_folder_id: str,
+    includeHiddenFolders: bool = False
+) -> dict:
+    """
+    List child folders under a specific Outlook mail folder.
+
+    Args:
+        parent_folder_id (str): ID of the parent mail folder.
+        includeHiddenFolders (bool, optional): Whether to include hidden folders. Defaults to False.
+
+    Returns:
+        dict: JSON with list of child folders or error.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{parent_folder_id}/childFolders"
+    params = {}
+    if includeHiddenFolders:
+        params["includeHiddenFolders"] = "true"
+
+    try:
+        return params
+        #response = requests.get(url, headers=client['headers'], params=params)
+        #response.raise_for_status()
+        logging.info(f"Retrieved child folders for parent folder: {parent_folder_id}")
+        #return response.json()
+    except Exception as e:
+        logging.error(f"Could not get child folders from {url}: {e}")
+        return {"error": f"Could not get child folders from {url}"}
