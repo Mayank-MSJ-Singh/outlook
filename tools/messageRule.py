@@ -57,3 +57,148 @@ def outlookMail_get_inbox_rule_by_id(rule_id: str) -> dict:
         logger.error(f"Could not get inbox rule {rule_id} at {url}: {e}")
         return {"error": f"Could not get inbox rule {rule_id} at {url}: {e}"}
 
+
+def outlookMail_create_message_rule(displayName : str = None,
+                                    sequence : int = None,
+                                    isEnabled : bool = None,
+                                    conditions : dict = None,
+                                    actions : dict = None,
+                                    exceptions : dict = None,
+                                    ) -> dict:
+    """
+        Creates a new Outlook message rule using Microsoft Graph API
+
+        Required parameters:
+        displayName (str): Rule display name
+        sequence (int): Execution order among other rules (lower values execute first)
+        actions (dict): Actions to apply when conditions are met (see structure below)
+
+        Optional parameters:
+        isEnabled (bool): Whether the rule is active (default: True)
+        conditions (dict): Conditions triggering the rule (empty = all messages)
+        exceptions (dict): Exception conditions preventing rule execution
+
+        Returns:
+        dict: Created rule object on success, error dictionary on failure
+
+        Parameter Structures:
+        --------------------
+        1. actions (messageRuleActions - REQUIRED):
+            {
+                "assignCategories": [str],           # Categories to apply
+                "copyToFolder": str,                 # Folder ID for copying
+                "delete": bool,                      # Move to Deleted Items
+                "forwardAsAttachmentTo": [recipient],# Forward as attachment
+                "forwardTo": [recipient],            # Standard forward
+                "markAsRead": bool,                  # Mark as read
+                "markImportance": str,               # "low", "normal", "high"
+                "moveToFolder": str,                 # Folder ID for moving
+                "permanentDelete": bool,             # Skip Deleted Items
+                "redirectTo": [recipient],           # Redirect recipients
+                "stopProcessingRules": bool          # Halt further rules
+            }
+
+        2. conditions/exceptions (messageRulePredicates - OPTIONAL):
+            {
+                "bodyContains": [str],               # Body substring matches
+                "bodyOrSubjectContains": [str],      # Body/subject matches
+                "categories": [str],                 # Assigned categories
+                "fromAddresses": [recipient],        # Specific senders
+                "hasAttachments": bool,              # Attachment presence
+                "headerContains": [str],             # Header substring matches
+                "importance": str,                   # "low", "normal", "high"
+                "isApprovalRequest": bool,           # Approval requests
+                "isAutomaticForward": bool,          # Auto-forwarded messages
+                "isAutomaticReply": bool,            # Auto-replies
+                "isEncrypted": bool,                 # Encrypted messages
+                "isMeetingRequest": bool,            # Meeting requests
+                "isMeetingResponse": bool,           # Meeting responses
+                "isNonDeliveryReport": bool,         # NDR messages
+                "isPermissionControlled": bool,      # RMS-protected messages
+                "isReadReceipt": bool,              # Read receipts
+                "isSigned": bool,                   # S/MIME signed
+                "isVoicemail": bool,                # Voice messages
+                "messageActionFlag": str,            # "any", "call", "forward", etc.
+                "notSentToMe": bool,                # Excludes mailbox owner
+                "recipientContains": [str],          # To/Cc recipient strings
+                "senderContains": [str],             # From address strings
+                "sensitivity": str,                 # "normal", "personal", "private"
+                "sentCcMe": bool,                   # Owner in Cc
+                "sentOnlyToMe": bool,               # Owner is sole recipient
+                "sentToAddresses": [recipient],      # Specific recipients
+                "sentToMe": bool,                   # Owner in To
+                "sentToOrCcMe": bool,               # Owner in To/Cc
+                "subjectContains": [str],            # Subject substrings
+                "withinSizeRange": {                # Size in kilobytes
+                    "minimumSize": int,
+                    "maximumSize": int
+                }
+            }
+
+        3. recipient Structure (used in actions/conditions):
+            {
+                "emailAddress": {
+                    "address": "user@domain.com",    # Email address (REQUIRED)
+                    "name": "Display Name"           # Optional display name
+                }
+            }
+
+        Example Usage:
+        --------------
+        Create rule to move high-importance emails from manager to folder:
+
+        conditions = {
+            "fromAddresses": [{
+                "emailAddress": {
+                    "address": "manager@contoso.com"
+                }
+            }],
+            "importance": "high"
+        }
+
+        actions = {
+            "moveToFolder": "AAMkAGM2...",
+            "markAsRead": True
+        }
+
+        response = outlookMail_create_message_rule(
+            displayName="Move Manager Urgent",
+            sequence=1,
+            actions=actions,
+            conditions=conditions
+        )
+    """
+
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/inbox/messageRules"
+
+    payload = {}
+
+    args = {
+        "displayName": displayName,
+        "sequence": sequence,
+        "isEnabled": isEnabled,
+        "conditions": conditions,
+        "actions": actions,
+        "exceptions": exceptions,
+    }
+
+    for i in args:
+        if args[i] is not None:
+            payload[i] = args[i]
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        response.raise_for_status()
+        logging.info("Created Outlook message rule")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not create Outlook message rule at {url}: {e}")
+        return {"error": f"Could not create Outlook message rule at {url}"}
+
+if  __name__ == "__main__":
+    print(outlookMail_create_message_rule())
