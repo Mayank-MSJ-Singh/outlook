@@ -5,7 +5,7 @@ from base import get_onedrive_client
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def outlookMail_create_search_folder(parent_folder_id: str,
+def outlookMail_create_mail_search_folder(parent_folder_id: str,
                                      display_name: str,
                                      include_nested_folders: bool,
                                      source_folder_ids: list,
@@ -81,7 +81,7 @@ def outlookMail_list_child_folders(
         logging.error(f"Could not get child folders from {url}: {e}")
         return {"error": f"Could not get child folders from {url}"}
 
-def outlookMail_get_mail_folder(folder_id: str) -> dict:
+def outlookMail_get_mail_search_folder(folder_id: str) -> dict:
     """
     Retrieve details of a specific Outlook mail folder by its ID.
 
@@ -107,7 +107,7 @@ def outlookMail_get_mail_folder(folder_id: str) -> dict:
         logging.error(f"Could not get mail folder from {url}: {e}")
         return {"error": f"Could not get mail folder from {url}"}
 
-def outlookMail_update_mail_folder(folder_id: str,
+def outlookMail_update_mail_search_folder(folder_id: str,
                                    displayName: str = None,
                                    includeNestedFolders: bool = None,
                                    sourceFolderIds: list = None,
@@ -150,7 +150,7 @@ def outlookMail_update_mail_folder(folder_id: str,
     except Exception as e:
         logging.error(f"Could not update mail folder at {url}: {e}")
         return {"error": f"Could not update mail folder at {url}"}
-def outlookMail_delete_mail_folder(folder_id: str) -> dict:
+def outlookMail_delete_mail_search_folder(folder_id: str) -> dict:
     """
     Delete a mail folder in Outlook by its folder ID.
 
@@ -176,7 +176,7 @@ def outlookMail_delete_mail_folder(folder_id: str) -> dict:
         logging.error(f"Could not delete mail folder at {url}: {e}")
         return {"error": f"Could not delete mail folder at {url}"}
 
-def outlookMail_permanent_delete_mail_folder(folder_id: str) -> dict:
+def outlookMail_permanent_delete_mail_search_folder(folder_id: str) -> dict:
     """
     Permanently delete a mail folder in Outlook by its folder ID.
 
