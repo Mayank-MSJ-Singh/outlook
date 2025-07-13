@@ -81,4 +81,28 @@ def outlookMail_list_child_folders(
         logging.error(f"Could not get child folders from {url}: {e}")
         return {"error": f"Could not get child folders from {url}"}
 
+def outlookMail_get_mail_folder(folder_id: str) -> dict:
+    """
+    Retrieve details of a specific Outlook mail folder by its ID.
 
+    Args:
+        folder_id (str): The unique ID of the mail folder.
+
+    Returns:
+        dict: JSON with folder details, or an error message.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}"
+
+    try:
+        response = requests.get(url, headers=client['headers'])
+        response.raise_for_status()
+        logging.info(f"Retrieved mail folder: {folder_id}")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not get mail folder from {url}: {e}")
+        return {"error": f"Could not get mail folder from {url}"}
