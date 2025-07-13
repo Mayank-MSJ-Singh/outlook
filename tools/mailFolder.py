@@ -215,3 +215,32 @@ def outlookMail_update_folder_display_name(folder_id: str, display_name: str) ->
     except Exception as e:
         logging.error(f"Failed to update folder at {url}: {e}")
         return {"error": f"Failed to update folder at {url}"}
+
+def outlookMail_delete_folder(folder_id: str) -> dict:
+    """
+    Delete an Outlook mail folder by ID.
+
+    Args:
+        folder_id (str): The ID of the folder to delete.
+
+    Returns:
+        dict: Result message or error details.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}"
+
+    try:
+        response = requests.delete(url, headers=client['headers'])
+        if response.status_code == 204:
+            logging.info(f"Deleted folder with ID {folder_id}")
+            return {"message": f"Folder {folder_id} deleted successfully"}
+        else:
+            logging.error(f"Failed to delete folder {folder_id}: {response.text}")
+            return {"error": f"Unexpected response: {response.status_code}", "details": response.text}
+    except Exception as e:
+        logging.error(f"Could not delete folder at {url}: {e}")
+        return {"error": f"Could not delete folder at {url}"}
