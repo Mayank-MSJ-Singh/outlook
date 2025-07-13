@@ -36,3 +36,4 @@ def outlookMail_list_folders(include_hidden: bool = True) -> dict:
     except Exception as e:
         logging.error(f"Could not get mail folders from {url}: {e}")
         return {"error": f"Could not get mail folders from {url}: {e}"}
+
