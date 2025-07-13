@@ -396,6 +396,3 @@ def outlookMail_delete_message_rule(rule_id: str) -> dict:
     except Exception as e:
         logging.error(f"Could not delete Outlook message rule at {url}: {e}")
         return {"error": f"Could not delete Outlook message rule at {url}"}
-
-if  __name__ == "__main__":
-    print(outlookMail_create_message_rule())
