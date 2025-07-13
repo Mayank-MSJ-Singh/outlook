@@ -175,3 +175,29 @@ def outlookMail_delete_mail_folder(folder_id: str) -> dict:
     except Exception as e:
         logging.error(f"Could not delete mail folder at {url}: {e}")
         return {"error": f"Could not delete mail folder at {url}"}
+
+def outlookMail_permanent_delete_mail_folder(folder_id: str) -> dict:
+    """
+    Permanently delete a mail folder in Outlook by its folder ID.
+
+    Args:
+        folder_id (str): The unique ID of the mail folder to permanently delete.
+
+    Returns:
+        dict: {"success": True} on success, or {"error": "..."} on failure.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}/permanentDelete"
+
+    try:
+        response = requests.post(url, headers=client['headers'])
+        response.raise_for_status()
+        logging.info(f"Permanently deleted mail folder: {folder_id}")
+        return {"success": True}
+    except Exception as e:
+        logging.error(f"Could not permanently delete mail folder at {url}: {e}")
+        return {"error": f"Could not permanently delete mail folder at {url}"}
