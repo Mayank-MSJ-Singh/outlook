@@ -34,4 +34,6 @@ GET /me/mailFolders/{id}/messages/{id}/attachments/{id}/$value
 GET /me/mailFolders/{id}/childFolders/{id}/.../messages/{id}/attachments/{id}/$value
 
 
+https://learn.microsoft.com/en-us/graph/api/mailfolder-post-messages?view=graph-rest-1.0&tabs=http
+
 ```

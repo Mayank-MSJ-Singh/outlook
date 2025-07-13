@@ -159,3 +159,31 @@ def outlookMail_create_child_folder(parent_folder_id: str, display_name: str, is
     except Exception as e:
         logging.error(f"Could not create child folder at {url}: {e}")
         return {"error": f"Could not create child folder at {url}"}
+
+def outlookMail_list_messages_from_folder(folder_id: str, top: int = 10) -> dict:
+    """
+    Retrieve messages from a specific Outlook mail folder.
+
+    Args:
+        folder_id (str): The ID of the folder.
+        top (int, optional): Number of messages to return. Defaults to 10.
+
+    Returns:
+        dict: JSON response with list of messages, or error details.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}/messages"
+    params = {'$top': top}
+
+    try:
+        response = requests.get(url, headers=client['headers'], params=params)
+        response.raise_for_status()
+        logging.info(f"Fetched messages from folder: {folder_id}")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Failed to fetch messages from {url}: {e}")
+        return {"error": f"Failed to fetch messages from {url}"}
