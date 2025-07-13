@@ -333,3 +333,32 @@ def outlookMail_move_folder(folder_id: str, destination_id: str) -> dict:
     except Exception as e:
         logging.error(f"Could not move Outlook mail folder at {url}: {e}")
         return {"error": f"Could not move Outlook mail folder at {url}"}
+
+
+def outlookMail_permanent_delete_folder(user_id: str, folder_id: str) -> dict:
+    """
+    Permanently delete an Outlook mail folder for a user.
+
+    Args:
+        user_id (str): The user's ID or userPrincipalName (e.g., 'user@domain.com').
+        folder_id (str): The ID of the folder to permanently delete.
+
+    Returns:
+        dict: API response or error message.
+    """
+    client = get_onedrive_client()  # your usual way to get Graph auth headers
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+
+    url = f"{client['base_url']}/users/{user_id}/mailFolders/{folder_id}/permanentDelete"
+
+    try:
+        response = requests.post(url, headers=client['headers'])
+        response.raise_for_status()
+        logging.info(f"Permanently deleted folder: {folder_id}")
+        return {"success": True}
+    except Exception as e:
+        logging.error(f"Could not permanently delete folder at {url}: {e}")
+        return {"error": str(e)}
