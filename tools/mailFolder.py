@@ -95,3 +95,34 @@ def outlookMail_create_mail_folder(display_name: str, is_hidden: bool = False) -
     except Exception as e:
         logging.error(f"Could not create mail folder at {url}: {e}")
         return {"error": f"Could not create mail folder at {url}"}
+
+def outlookMail_list_child_folders(folder_id: str, include_hidden: bool = False) -> dict:
+    """
+    List child folders of a specific Outlook mail folder.
+
+    Args:
+        folder_id (str): ID of the parent folder.
+        include_hidden (bool, optional): Whether to include hidden folders. Defaults to False.
+
+    Returns:
+        dict: JSON response from Microsoft Graph with the list of child folders,
+              or error info if request fails.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{folder_id}/childFolders"
+    params = {}
+    if include_hidden:
+        params['includeHiddenFolders'] = 'true'
+
+    try:
+        response = requests.get(url, headers=client['headers'], params=params)
+        response.raise_for_status()
+        logging.info(f"Retrieved child folders of folder: {folder_id}")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not get child folders from {url}: {e}")
+        return {"error": f"Could not get child folders from {url}"}
