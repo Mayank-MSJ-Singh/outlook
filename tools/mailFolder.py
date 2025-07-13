@@ -274,3 +274,32 @@ def outlookMail_copy_folder(folder_id: str, destination_id: str) -> dict:
     except Exception as e:
         logging.error(f"Could not copy Outlook folder at {url}: {e}")
         return {"error": f"Could not copy Outlook folder at {url}"}
+
+def outlookMail_get_folder_delta(max_pagesize: int = 2) -> dict:
+    """
+    Get changes (delta) for all mail folders in the signed-in user's mailbox.
+
+    Args:
+        max_pagesize (int, optional): Max number of items per page. Defaults to 2.
+
+    Returns:
+        dict: JSON response from Microsoft Graph API with folder delta,
+              or error info on failure.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/delta"
+    headers = client['headers'].copy()
+    headers["Prefer"] = f"odata.maxpagesize={max_pagesize}"
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        logging.info("Retrieved folder delta successfully")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not get folder delta from {url}: {e}")
+        return {"error": f"Could not get folder delta from {url}"}
