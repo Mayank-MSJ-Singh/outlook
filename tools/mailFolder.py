@@ -126,3 +126,36 @@ def outlookMail_list_child_folders(folder_id: str, include_hidden: bool = False)
     except Exception as e:
         logging.error(f"Could not get child folders from {url}: {e}")
         return {"error": f"Could not get child folders from {url}"}
+
+def outlookMail_create_child_folder(parent_folder_id: str, display_name: str, is_hidden: bool = False) -> dict:
+    """
+    Create a child mail folder inside a specified Outlook parent folder.
+
+    Args:
+        parent_folder_id (str): ID of the parent mail folder.
+        display_name (str): Display name for the new folder.
+        is_hidden (bool, optional): Whether the new folder should be hidden. Defaults to False.
+
+    Returns:
+        dict: Created folder details on success, or error message.
+    """
+    client = get_onedrive_client()
+    if not client:
+        logging.error("Could not get Outlook client")
+        return {"error": "Could not get Outlook client"}
+
+    url = f"{client['base_url']}/me/mailFolders/{parent_folder_id}/childFolders"
+
+    payload = {
+        "displayName": display_name,
+        "isHidden": is_hidden
+    }
+
+    try:
+        response = requests.post(url, headers=client['headers'], json=payload)
+        response.raise_for_status()
+        logging.info(f"Created child folder '{display_name}' under folder: {parent_folder_id}")
+        return response.json()
+    except Exception as e:
+        logging.error(f"Could not create child folder at {url}: {e}")
+        return {"error": f"Could not create child folder at {url}"}
