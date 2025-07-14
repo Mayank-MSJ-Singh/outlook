@@ -5,7 +5,12 @@ from .base import get_onedrive_client
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def outlookMail_list_messages(top: int = 10, filter_query: str = None, orderby: str = None, select: str = None):
+def outlookMail_list_messages(
+        top: int = 10,
+        filter_query: str = None,
+        orderby: str = None,
+        select: str = None
+) -> dict:
     """
     Retrieve a list of Outlook mail messages from the signed-in user's mailbox.
 
@@ -65,7 +70,13 @@ def outlookMail_list_messages(top: int = 10, filter_query: str = None, orderby: 
         return {"error": f"Could not get Outlook messages from {url}"}
 
 
-def outlookMail_list_messages_from_folder(folder_id: str, top: int = 10, filter_query: str = None, orderby: str = None, select: str = None):
+def outlookMail_list_messages_from_folder(
+        folder_id: str,
+        top: int = 10,
+        filter_query: str = None,
+        orderby: str = None,
+        select: str = None
+) -> dict:
     """
     Retrieve a list of Outlook mail messages from a specific folder in the signed-in user's mailbox.
 
@@ -128,24 +139,41 @@ def outlookMail_list_messages_from_folder(folder_id: str, top: int = 10, filter_
 
 
 
-def outlookMail_create_draft(subject: str, body_content: str, to_recipients: list, importance: str = "Normal"):
+def outlookMail_create_draft(
+    subject: str,
+    body_content: str,
+    to_recipients: list,
+    cc_recipients: list = None,
+    bcc_recipients: list = None,
+    reply_to: list = None,
+    importance: str = "Normal",
+    categories: list = None
+) -> dict:
     """
-    Create a draft Outlook mail message for the signed-in user.
+    Create a draft Outlook mail message using Microsoft Graph API (POST method)
 
-    Args:
-        subject (str): The subject of the draft email.
-        body_content (str): The HTML content of the email body.
-        to_recipients (list): List of recipient email addresses as strings.
-                              Example: ["someone@example.com", "another@example.com"]
-        importance (str, optional): Importance level ("Low", "Normal", "High"). Defaults to "Normal".
+    Required parameters:
+    --------------------
+    subject (str): Subject of the draft message
+    body_content (str): HTML content of the message body
+    to_recipients (list): List of email addresses for the "To" field
+
+    Optional parameters:
+    --------------------
+    cc_recipients (list): List of email addresses for "Cc"
+    bcc_recipients (list): List of email addresses for "Bcc"
+    reply_to (list): List of email addresses for "Reply-To"
+    importance (str): 'Low', 'Normal', or 'High' (default: 'Normal')
+    categories (list): List of category strings (e.g., ["FollowUp", "ProjectX"])
 
     Returns:
-        dict: JSON response from Microsoft Graph API with the created draft's details,
-              or an error message if the request fails.
+    --------
+    dict: Created draft object on success, or an error dictionary on failure
 
     Notes:
-        - Requires an authenticated Outlook client.
-        - The draft won't be sent automatically; it's saved in the Drafts folder.
+    ------
+    - The draft is saved to the user's Drafts folder.
+    - Recipient lists accept simple email strings; function builds correct schema.
     """
     client = get_onedrive_client()
     if not client:
@@ -153,52 +181,78 @@ def outlookMail_create_draft(subject: str, body_content: str, to_recipients: lis
         return {"error": "Could not get Outlook client"}
 
     url = f"{client['base_url']}/me/messages"
-
-    # Build recipient list in required format
-    recipients = [
-        {"emailAddress": {"address": email}}
-        for email in to_recipients
-    ]
-
     payload = {
         "subject": subject,
         "importance": importance,
         "body": {
             "contentType": "HTML",
             "content": body_content
-        },
-        "toRecipients": recipients
+        }
     }
+
+    # Add categories if provided
+    if categories:
+        payload["categories"] = categories
+
+    # Recipient fields to add dynamically
+    recipient_fields = {
+        "toRecipients": to_recipients,
+        "ccRecipients": cc_recipients,
+        "bccRecipients": bcc_recipients,
+        "replyTo": reply_to
+    }
+
+    for key, emails in recipient_fields.items():
+        if emails:
+            payload[key] = [{"emailAddress": {"address": email}} for email in emails]
 
     try:
         response = requests.post(url, headers=client['headers'], json=payload)
+        response.raise_for_status()
         logger.info("Created draft Outlook mail message")
         return response.json()
     except Exception as e:
         logger.error(f"Could not create Outlook draft message at {url}: {e}")
         return {"error": f"Could not create Outlook draft message at {url}"}
 
-def outlookMail_create_draft_in_folder(folder_id : str, subject: str, body_content: str, to_recipients: list, importance: str = "Normal"):
-    """
-    Create a draft Outlook mail message in specific folder in the signed-in user's mailbox.
 
-    Args:
-        folder_id (str):
-            The unique ID of the Outlook mail folder to retrieve messages from.
-            Example: 'AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAAD...'
-        subject (str): The subject of the draft email.
-        body_content (str): The HTML content of the email body.
-        to_recipients (list): List of recipient email addresses as strings.
-                              Example: ["someone@example.com", "another@example.com"]
-        importance (str, optional): Importance level ("Low", "Normal", "High"). Defaults to "Normal".
+def outlookMail_create_draft_in_folder(
+    folder_id: str,
+    subject: str,
+    body_content: str,
+    to_recipients: list,
+    cc_recipients: list = None,
+    bcc_recipients: list = None,
+    reply_to: list = None,
+    importance: str = "Normal",
+    categories: list = None
+) -> dict:
+    """
+    Create a draft Outlook mail message inside a specific folder using Microsoft Graph API (POST method)
+
+    Required parameters:
+    --------------------
+    folder_id (str): ID of the target mail folder (e.g., Drafts, custom folders)
+    subject (str): Subject of the draft
+    body_content (str): HTML content of the draft body
+    to_recipients (list): List of email addresses for the "To" field
+
+    Optional parameters:
+    --------------------
+    cc_recipients (list): Email addresses for "Cc"
+    bcc_recipients (list): Email addresses for "Bcc"
+    reply_to (list): Email addresses for "Reply-To"
+    importance (str): 'Low', 'Normal', or 'High' (default: 'Normal')
+    categories (list): Category labels for the draft
 
     Returns:
-        dict: JSON response from Microsoft Graph API with the created draft's details,
-              or an error message if the request fails.
+    --------
+    dict: Created draft object on success, or error dictionary on failure
 
     Notes:
-        - Requires an authenticated Outlook client.
-        - The draft won't be sent automatically; it's saved in the Drafts folder.
+    ------
+    - Saves the draft into the folder specified by folder_id
+    - Recipient lists accept simple email strings; function builds the correct schema
     """
     client = get_onedrive_client()
     if not client:
@@ -207,43 +261,137 @@ def outlookMail_create_draft_in_folder(folder_id : str, subject: str, body_conte
 
     url = f"{client['base_url']}/me/mailFolders/{folder_id}/messages"
 
-    # Build recipient list in required format
-    recipients = [
-        {"emailAddress": {"address": email}}
-        for email in to_recipients
-    ]
-
     payload = {
         "subject": subject,
         "importance": importance,
         "body": {
             "contentType": "HTML",
             "content": body_content
-        },
-        "toRecipients": recipients
+        }
     }
+
+    if categories:
+        payload["categories"] = categories
+
+    # Handle recipient fields dynamically
+    recipient_fields = {
+        "toRecipients": to_recipients,
+        "ccRecipients": cc_recipients,
+        "bccRecipients": bcc_recipients,
+        "replyTo": reply_to
+    }
+
+    for key, emails in recipient_fields.items():
+        if emails:
+            payload[key] = [{"emailAddress": {"address": email}} for email in emails]
 
     try:
         response = requests.post(url, headers=client['headers'], json=payload)
-        logger.info("Created draft Outlook mail message")
+        response.raise_for_status()
+        logger.info(f"Created draft Outlook mail message in folder: {folder_id}")
         return response.json()
     except Exception as e:
         logger.error(f"Could not create Outlook draft message at {url}: {e}")
         return {"error": f"Could not create Outlook draft message at {url}"}
 
-def outlookMail_update_draft(message_id: str, subject: str = None, body_content: str = None, to_recipients: list = None, importance: str = "Normal"):
+def outlookMail_update_draft(
+    message_id: str,
+    subject: str = None,
+    body_content: str = None,
+    to_recipients: list = None,
+    cc_recipients: list = None,
+    bcc_recipients: list = None,
+    reply_to: list = None,
+    importance: str = None,
+    internet_message_id: str = None,
+    is_delivery_receipt_requested: bool = None,
+    is_read: bool = None,
+    is_read_receipt_requested: bool = None,
+    categories: list = None,
+    inference_classification: str = None,
+    flag: dict = None,              # should match followupFlag schema
+    from_sender: dict = None,       # should match Recipient schema
+    sender: dict = None             # should match Recipient schema
+) -> dict:
     """
-    Update an existing Outlook draft message by message ID.
+    Updates an existing Outlook draft message using Microsoft Graph API (PATCH method)
 
-    Args:
-        message_id (str): The ID of the draft message to update.
-        subject (str, optional): New subject.
-        body_content (str, optional): New HTML content.
-        to_recipients (list, optional): New list of email addresses.
+    Required parameter:
+    message_id (str): ID of the draft message to update (e.g., "AAMkAGM2...")
+
+    Draft-Specific Parameters (updatable only in draft state):
+    subject (str): Message subject
+    body_content (str): HTML content of the message body
+    internet_message_id (str): RFC2822 message ID
+    reply_to (list): Email addresses for reply-to
+    toRecipients/ccRecipients/bccRecipients (list): Recipient email addresses
+
+    General Parameters (updatable in any state):
+    importance (str): 'Low', 'Normal', 'High'
+    is_delivery_receipt_requested (bool)
+    is_read (bool)
+    is_read_receipt_requested (bool)
+    categories (list): Category strings (e.g., ["Urgent", "FollowUp"])
+    inference_classification (str): 'focused' or 'other'
+    flag (dict): Follow-up flag settings
+    from_sender (dict): Mailbox owner/sender (must match actual mailbox)
+    sender (dict): Actual sending account (for shared mailboxes/delegates)
 
     Returns:
-        dict: JSON response from Microsoft Graph API with updated draft details,
-              or an error message if the request fails.
+    dict: Updated message object on success, error dictionary on failure
+
+    Parameter Structures:
+    --------------------
+    1. Recipient Structure (for from_sender/sender):
+        {
+            "emailAddress": {
+                "address": "user@domain.com",    # REQUIRED email
+                "name": "Display Name"           # Optional display name
+            }
+        }
+
+    2. followupFlag Structure (for flag parameter):
+        {
+            "completedDateTime": {   # Completion date/time
+                "dateTime": "yyyy-MM-ddThh:mm:ss",
+                "timeZone": "TimezoneName"
+            },
+            "dueDateTime": {         # Due date/time (requires startDateTime)
+                "dateTime": "yyyy-MM-ddThh:mm:ss",
+                "timeZone": "TimezoneName"
+            },
+            "flagStatus": "flagged", # "notFlagged", "flagged", "complete"
+            "startDateTime": {       # Start date/time
+                "dateTime": "yyyy-MM-ddThh:mm:ss",
+                "timeZone": "TimezoneName"
+            }
+        }
+
+    3. Body Structure (handled automatically from body_content):
+        {
+            "contentType": "HTML",   # Fixed as HTML
+            "content": "<html>...</html>"
+        }
+
+    Key Notes:
+    ----------
+    1. Draft Limitations:
+        - Subject/body/recipients/replyTo/internetMessageId ONLY updatable in drafts
+        - Attempting to update these in non-draft messages will fail
+    2. Sender Rules:
+        - 'from_sender' must correspond to actual mailbox owner
+        - 'sender' can be updated for shared mailboxes/delegate sending
+    3. Flag Requirements:
+        - dueDateTime requires startDateTime to be set
+        - Timezone must be Windows timezone names (e.g., "Pacific Standard Time")
+    4. Recipient Handling:
+        - All recipient lists (to/cc/bcc/reply_to) accept simple email strings
+        - Function automatically converts to full Recipient schema
+    5. PATCH Semantics:
+        - Only provided fields are updated
+        - Omitted fields retain current values
+        - Set fields to empty list [] to clear recipients
+        - Set body_content to "" for empty body
     """
     client = get_onedrive_client()
     if not client:
@@ -251,35 +399,57 @@ def outlookMail_update_draft(message_id: str, subject: str = None, body_content:
         return {"error": "Could not get Outlook client"}
 
     url = f"{client['base_url']}/me/messages/{message_id}"
-
     payload = {}
 
-    if subject:
-        payload["subject"] = subject
+    # Add plain fields
+    fields = {
+        "subject": subject,
+        "importance": importance,
+        "internetMessageId": internet_message_id,
+        "isDeliveryReceiptRequested": is_delivery_receipt_requested,
+        "isRead": is_read,
+        "isReadReceiptRequested": is_read_receipt_requested,
+        "categories": categories,
+        "inferenceClassification": inference_classification,
+        "flag": flag,
+        "from": from_sender,
+        "sender": sender
+    }
 
+    for key, value in fields.items():
+        if value is not None:
+            payload[key] = value
+
+    # Add body if provided
     if body_content:
         payload["body"] = {
             "contentType": "HTML",
             "content": body_content
         }
 
-    if to_recipients:
-        # make sure it's in the right format
-        recipients = [{"emailAddress": {"address": email}} for email in to_recipients]
-        payload["toRecipients"] = recipients
+    # Add recipients
+    recipient_fields = {
+        "toRecipients": to_recipients,
+        "ccRecipients": cc_recipients,
+        "bccRecipients": bcc_recipients,
+        "replyTo": reply_to
+    }
 
-    if importance:
-        payload["importance"] = importance
+    for key, emails in recipient_fields.items():
+        if emails:
+            payload[key] = [{"emailAddress": {"address": email}} for email in emails]
 
     try:
         response = requests.patch(url, headers=client['headers'], json=payload)
-        logger.info("Updated draft Outlook mail message")
+        response.raise_for_status()
+        logger.info(f"Updated draft Outlook mail message: {message_id}")
         return response.json()
     except Exception as e:
         logger.error(f"Could not update Outlook draft message at {url}: {e}")
         return {"error": f"Could not update Outlook draft message at {url}"}
 
-def outlookMail_delete_draft(message_id: str):
+
+def outlookMail_delete_draft(message_id: str) -> dict:
     """
     Delete an existing Outlook draft message by message ID.
 
@@ -302,7 +472,7 @@ def outlookMail_delete_draft(message_id: str):
         response = requests.delete(url, headers=client['headers'])
         if response.status_code == 204:
             logger.info("Deleted draft Outlook mail message successfully")
-            return "Deleted"
+            return {"Success":"Deleted"}
         else:
             logger.warning(f"Unexpected status code: {response.status_code}")
             # try to parse error if there is one
@@ -317,7 +487,10 @@ def outlookMail_delete_draft(message_id: str):
         logger.error(f"Could not delete Outlook draft message at {url}: {e}")
         return {"error": f"Could not delete Outlook draft message at {url}"}
 
-def outlookMail_copy_message(message_id: str, destination_folder_id: str):
+def outlookMail_copy_message(
+        message_id: str,
+        destination_folder_id: str
+) -> dict:
     """
     Copy an existing Outlook draft message by message ID.
 
@@ -344,7 +517,7 @@ def outlookMail_copy_message(message_id: str, destination_folder_id: str):
         response = requests.delete(url, headers=client['headers'], json=payload)
         if response.status_code == 204:
             logger.info("Copied draft Outlook mail message successfully")
-            return "Copied"
+            return {"success" : "Copied"}
         else:
             logger.warning(f"Unexpected status code: {response.status_code}")
             # try to parse error if there is one
@@ -359,7 +532,11 @@ def outlookMail_copy_message(message_id: str, destination_folder_id: str):
         logger.error(f"Could not copy Outlook draft message at {url}: {e}")
         return {"error": f"Could not copy Outlook draft message at {url}"}
 
-def outlookMail_create_forward_draft(message_id: str, comment: str, to_recipients: list):
+def outlookMail_create_forward_draft(
+        message_id: str,
+        comment: str,
+        to_recipients: list
+) -> dict:
     """
     Create a draft forward message for an existing Outlook message.
 
@@ -395,7 +572,10 @@ def outlookMail_create_forward_draft(message_id: str, comment: str, to_recipient
         logger.error(f"Could not create Outlook forward draft message at {url}: {e}")
         return {"error": f"Could not create Outlook forward draft message at {url}"}
 
-def outlookMail_create_reply_draft(message_id: str, comment: str):
+def outlookMail_create_reply_draft(
+        message_id: str,
+        comment: str
+) -> dict:
     """
     Create a draft reply message to an existing Outlook message.
 
@@ -429,7 +609,10 @@ def outlookMail_create_reply_draft(message_id: str, comment: str):
         return {"error": f"Could not create Outlook reply draft message at {url}"}
 
 
-def outlookMail_create_reply_all_draft(message_id: str, comment: str = ""):
+def outlookMail_create_reply_all_draft(
+        message_id: str,
+        comment: str = ""
+) -> dict:
     """
     Create a reply-all draft to an existing Outlook message.
 
@@ -460,7 +643,11 @@ def outlookMail_create_reply_all_draft(message_id: str, comment: str = ""):
         logger.error(f"Could not create reply-all draft at {url}: {e}")
         return {"error": f"Could not create reply-all draft at {url}"}
 
-def outlookMail_forward_message(message_id: str, to_recipients: list, comment: str = ""):
+def outlookMail_forward_message(
+        message_id: str,
+        to_recipients: list,
+        comment: str = ""
+) -> dict:
     """
     Forward an Outlook message by message ID.
 
@@ -498,7 +685,10 @@ def outlookMail_forward_message(message_id: str, to_recipients: list, comment: s
         logger.error(f"Could not forward Outlook message at {url}: {e}")
         return {"error": f"Could not forward Outlook message at {url}"}
 
-def outlookMail_move_message(message_id: str, destination_folder_id: str):
+def outlookMail_move_message(
+        message_id: str,
+        destination_folder_id: str
+) -> dict:
     """
     Move an Outlook mail message to another folder.
 
@@ -530,7 +720,11 @@ def outlookMail_move_message(message_id: str, destination_folder_id: str):
         logger.error(f"Could not move Outlook mail message at {url}: {e}")
         return {"error": f"Could not move Outlook mail message at {url}"}
 
-def outlookMail_send_reply_custom(message_id: str, comment: str, to_recipients: list):
+def outlookMail_send_reply_custom(
+        message_id: str,
+        comment: str,
+        to_recipients: list
+) -> dict:
     """
     Send a reply to an Outlook mail message, with custom recipients and names.
 
@@ -577,7 +771,10 @@ def outlookMail_send_reply_custom(message_id: str, comment: str, to_recipients: 
         return {"error": f"Could not reply (custom) to Outlook mail message at {url}"}
 
 
-def outlookMail_reply_all(message_id: str, comment: str):
+def outlookMail_reply_all(
+        message_id: str,
+        comment: str
+) -> dict:
     """
     Reply all to a message by ID with a comment.
 
@@ -606,7 +803,7 @@ def outlookMail_reply_all(message_id: str, comment: str):
         logger.error(f"Could not reply all to Outlook message at {url}: {e}")
         return {"error": f"Could not reply all to Outlook message at {url}"}
 
-def outlookMail_send_draft(message_id: str):
+def outlookMail_send_draft(message_id: str) -> dict:
     """
     Send an existing draft Outlook mail message by message ID.
 
@@ -637,7 +834,10 @@ def outlookMail_send_draft(message_id: str):
         logger.error(f"Could not send Outlook draft message at {url}: {e}")
         return {"error": f"Could not send Outlook draft message at {url}"}
 
-def outlookMail_permanent_delete(user_id: str, message_id: str):
+def outlookMail_permanent_delete(
+        user_id: str,
+        message_id: str
+) -> dict:
     """
     Permanently delete a message by message ID for a specific user.
 
@@ -668,52 +868,3 @@ def outlookMail_permanent_delete(user_id: str, message_id: str):
     except Exception as e:
         logger.error(f"Could not permanently delete message at {url}: {e}")
         return {"error": f"Could not permanently delete message at {url}"}
-
-
-if __name__ == "__main__":
-    #print(outlookMail_list_messages(top = 1))
-    print(outlookMail_list_messages_from_folder(folder_id='AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA'))
-    '''
-    draft = outlookMail_create_draft(
-        subject="Test draft",
-        body_content="<p>Hello, this is a draft.</p>",
-        to_recipients=["mayank.msj.singh@gmail.com"]
-    )
-    print(draft)
-    '''
-
-
-    '''
-    draft = outlookMail_create_draft_in_folder(
-        folder_id='AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA',
-        subject="Test draft",
-        body_content="<p>Hello, this is a draft.</p>",
-        to_recipients=["mayank.msj.singh@gmail.com"]
-    )
-    print(draft)
-    '''
-    '''
-    draft_id = "AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgBGAAADb25xEWuFWEWCX6SpYNrvPwcAp93M14k-O06xyivtWYvXZgAAAgEPAAAAp93M14k-O06xyivtWYvXZgAAAn1oAAAA"
-
-    result = outlookMail_update_draft(
-        message_id=draft_id,
-        subject="Updated subject",
-        body_content="<p>Updated body content from API</p>",
-        importance="High"
-    )
-    print(result)
-    '''
-    '''
-    draft_id = "AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgBGAAADb25xEWuFWEWCX6SpYNrvPwcAp93M14k-O06xyivtWYvXZgAAAgEPAAAAp93M14k-O06xyivtWYvXZgAAAn1oAAAA"
-
-    result = outlookMail_update_draft(
-            message_id=draft_id,
-            subject="Updated subject",
-            body_content="<p>Updated body content from API</p>",
-            importance="High"
-        )
-    print(result)
-    '''
-    #print(outlookMail_delete_draft("AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgBGAAADb25xEWuFWEWCX6SpYNrvPwcAp93M14k-O06xyivtWYvXZgAAAgEPAAAAp93M14k-O06xyivtWYvXZgAAAn1rAAAA"))
-    #print(outlookMail_copy_message('AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgBGAAADb25xEWuFWEWCX6SpYNrvPwcAp93M14k-O06xyivtWYvXZgAAAgEPAAAAp93M14k-O06xyivtWYvXZgAAAn1sAAAA','AQMkADAwATNiZmYAZS05YmUxLTk3NDYtMDACLTAwCgAuAAADb25xEWuFWEWCX6SpYNrvPwEAp93M14k-O06xyivtWYvXZgAAAgEMAAAA'))
-    pass

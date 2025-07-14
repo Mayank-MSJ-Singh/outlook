@@ -58,13 +58,14 @@ def outlookMail_get_inbox_rule_by_id(rule_id: str) -> dict:
         return {"error": f"Could not get inbox rule {rule_id} at {url}: {e}"}
 
 
-def outlookMail_create_message_rule(displayName : str = None,
-                                    sequence : int = None,
-                                    isEnabled : bool = None,
-                                    conditions : dict = None,
-                                    actions : dict = None,
-                                    exceptions : dict = None,
-                                    ) -> dict:
+def outlookMail_create_message_rule(
+        displayName : str = None,
+        sequence : int = None,
+        isEnabled : bool = None,
+        conditions : dict = None,
+        actions : dict = None,
+        exceptions : dict = None,
+        ) -> dict:
     """
         Creates a new Outlook message rule using Microsoft Graph API
 

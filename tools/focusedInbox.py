@@ -1,14 +1,14 @@
 import requests
 import logging
-from typing import Tuple, Union, Dict, Any
 from .base import get_onedrive_client
-import base64
-import os
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def outlookMail_update_inference_override(override_id: str, classify_as: str = "focused") -> dict:
+def outlookMail_update_inference_override(
+        override_id: str,
+        classify_as: str = "focused"
+) -> dict:
     """
     Update an existing inference classification override.
 

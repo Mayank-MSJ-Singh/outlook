@@ -5,11 +5,13 @@ from .base import get_onedrive_client
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def outlookMail_create_mail_search_folder(parent_folder_id: str,
-                                     display_name: str,
-                                     include_nested_folders: bool,
-                                     source_folder_ids: list,
-                                     filter_query: str) -> dict:
+def outlookMail_create_mail_search_folder(
+        parent_folder_id: str,
+        display_name: str,
+        include_nested_folders: bool,
+        source_folder_ids: list,
+        filter_query: str
+) -> dict:
     """
     Create a new mail search folder under a specified parent folder.
 
@@ -18,7 +20,7 @@ def outlookMail_create_mail_search_folder(parent_folder_id: str,
         display_name (str): Display name for the search folder.
         include_nested_folders (bool): Whether to include subfolders.
         source_folder_ids (list): List of folder IDs to search.
-        filter_query (str): OData filter query string.
+        filter_query (str): OData filter query string (e.g., "contains(subject, 'weekly digest')").
 
     Returns:
         dict: Created search folder info on success, or error dict on failure.
@@ -75,11 +77,13 @@ def outlookMail_get_mail_search_folder(folder_id: str) -> dict:
         logging.error(f"Could not get mail folder from {url}: {e}")
         return {"error": f"Could not get mail folder from {url}"}
 
-def outlookMail_update_mail_search_folder(folder_id: str,
-                                   displayName: str = None,
-                                   includeNestedFolders: bool = None,
-                                   sourceFolderIds: list = None,
-                                   filterQuery: str = None) -> dict:
+def outlookMail_update_mail_search_folder(
+        folder_id: str,
+        displayName: str = None,
+        includeNestedFolders: bool = None,
+        sourceFolderIds: list = None,
+        filterQuery: str = None
+) -> dict:
     """
     Update a mail folder (typically a mailSearchFolder) in Outlook.
 
@@ -88,7 +92,7 @@ def outlookMail_update_mail_search_folder(folder_id: str,
         displayName (str, optional): New display name for the folder.
         includeNestedFolders (bool, optional): Whether to do deep search (True) or shallow (False).
         sourceFolderIds (list of str, optional): IDs of folders to be mined.
-        filterQuery (str, optional): OData filter to filter messages.
+        filterQuery (str, optional): OData filter to filter messages (e.g., "contains(subject, 'weekly digest')").
 
     Returns:
         dict: Updated folder object on success, or error info on failure.
@@ -170,14 +174,20 @@ def outlookMail_permanent_delete_mail_search_folder(folder_id: str) -> dict:
         logging.error(f"Could not permanently delete mail folder at {url}: {e}")
         return {"error": f"Could not permanently delete mail folder at {url}"}
 
-def outlookMail_get_messages_from_folder(folder_id: str, top: int = 10, filter_query: str = None, orderby: str = None, select: str = None) -> dict:
+def outlookMail_get_messages_from_folder(
+        folder_id: str,
+        top: int = 10,
+        filter_query: str = None,
+        orderby: str = None,
+        select: str = None
+)-> dict:
     """
     Retrieve messages from a specific Outlook mail folder.
 
     Args:
         folder_id (str): The unique ID of the mail folder.
         top (int, optional): Max number of messages to return (default: 10).
-        filter_query (str, optional): OData $filter expression (e.g., "isRead eq false").
+        filter_query (str, optional): OData $filter expression (e.g., "contains(subject, 'weekly digest')").
         orderby (str, optional): OData $orderby expression (e.g., "receivedDateTime desc").
         select (str, optional): Comma-separated list of properties to include.
 

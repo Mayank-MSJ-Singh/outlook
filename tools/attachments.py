@@ -1,6 +1,5 @@
 import requests
 import logging
-from typing import Tuple, Union, Dict, Any
 from .base import get_onedrive_client
 import base64
 import os
@@ -8,7 +7,11 @@ import os
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def outlookMail_get_attachment(message_id: str, attachment_id: str, expand: str = None):
+def outlookMail_get_attachment(
+        message_id: str,
+        attachment_id: str,
+        expand: str = None
+) -> dict:
     """
     Get a specific attachment from an Outlook mail message.
 
@@ -48,7 +51,11 @@ def outlookMail_get_attachment(message_id: str, attachment_id: str, expand: str 
         logger.error(f"Could not get Outlook attachment at {url}: {e}")
         return {"error": f"Could not get Outlook attachment at {url}"}
 
-def outlookMail_download_attachment(message_id: str, attachment_id: str, save_path: str):
+def outlookMail_download_attachment(
+        message_id: str,
+        attachment_id: str,
+        save_path: str
+)-> dict:
     """
     Download an attachment from Outlook mail as raw binary using $value.
 
@@ -81,7 +88,10 @@ def outlookMail_download_attachment(message_id: str, attachment_id: str, save_pa
         logging.error(f"Failed to download attachment using $value at {url}: {e}")
         return f"Error: {e}"
 
-def outlookMail_delete_attachment(message_id: str, attachment_id: str):
+def outlookMail_delete_attachment(
+        message_id: str,
+        attachment_id: str
+) -> dict:
     """
     Delete an attachment from a draft Outlook mail message.
 
@@ -115,7 +125,11 @@ def outlookMail_delete_attachment(message_id: str, attachment_id: str):
         logging.error(f"Could not delete attachment at {url}: {e}")
         return {"error": f"Could not delete attachment at {url}"}
 
-def outlookMail_add_attachment(message_id: str, file_path: str, attachment_name: str = None) -> Union[Dict, str]:
+def outlookMail_add_attachment(
+        message_id: str,
+        file_path: str,
+        attachment_name: str = None
+) -> dict:
     """
     Add an attachment to a draft Outlook mail message.
 
@@ -161,7 +175,12 @@ def outlookMail_add_attachment(message_id: str, file_path: str, attachment_name:
         return {"error": f"Could not add attachment to Outlook draft message at {url}"}
 
 
-def outlookMail_upload_large_attachment(message_id: str, file_path: str, is_inline: bool = False, content_id: str = None) -> dict:
+def outlookMail_upload_large_attachment(
+        message_id: str,
+        file_path: str,
+        is_inline: bool = False,
+        content_id: str = None
+) -> dict:
     """
     Upload a large file attachment to a draft message using an upload session.
 
@@ -256,4 +275,3 @@ def outlookMail_list_attachments(message_id: str) -> dict:
     except Exception as e:
         logging.error(f"Could not list attachments at {url}: {e}")
         return {"error": f"Could not list attachments at {url}: {e}"}
-

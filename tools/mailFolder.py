@@ -1,9 +1,6 @@
 import requests
 import logging
-from typing import Tuple, Union, Dict, Any
 from .base import get_onedrive_client
-import base64
-import os
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -64,7 +61,10 @@ def outlookMail_get_mail_folder(folder_id: str) -> dict:
         logging.error(f"Could not get mail folder at {url}: {e}")
         return {"error": f"Could not get mail folder at {url}"}
 
-def outlookMail_create_mail_folder(display_name: str, is_hidden: bool = False) -> dict:
+def outlookMail_create_mail_folder(
+        display_name: str,
+        is_hidden: bool = False
+) -> dict:
     """
     Create a new mail folder in the signed-in user's mailbox.
 
@@ -96,7 +96,10 @@ def outlookMail_create_mail_folder(display_name: str, is_hidden: bool = False) -
         logging.error(f"Could not create mail folder at {url}: {e}")
         return {"error": f"Could not create mail folder at {url}"}
 
-def outlookMail_list_child_folders(folder_id: str, include_hidden: bool = False) -> dict:
+def outlookMail_list_child_folders(
+        folder_id: str,
+        include_hidden: bool = False
+) -> dict:
     """
     List child folders of a specific Outlook mail folder.
 
@@ -127,7 +130,11 @@ def outlookMail_list_child_folders(folder_id: str, include_hidden: bool = False)
         logging.error(f"Could not get child folders from {url}: {e}")
         return {"error": f"Could not get child folders from {url}"}
 
-def outlookMail_create_child_folder(parent_folder_id: str, display_name: str, is_hidden: bool = False) -> dict:
+def outlookMail_create_child_folder(
+        parent_folder_id: str,
+        display_name: str,
+        is_hidden: bool = False
+) -> dict:
     """
     Create a child mail folder inside a specified Outlook parent folder.
 
@@ -160,7 +167,10 @@ def outlookMail_create_child_folder(parent_folder_id: str, display_name: str, is
         logging.error(f"Could not create child folder at {url}: {e}")
         return {"error": f"Could not create child folder at {url}"}
 
-def outlookMail_list_messages_from_folder(folder_id: str, top: int = 10) -> dict:
+def outlookMail_list_messages_from_folder(
+        folder_id: str,
+        top: int = 10
+) -> dict:
     """
     Retrieve messages from a specific Outlook mail folder.
 
@@ -188,7 +198,10 @@ def outlookMail_list_messages_from_folder(folder_id: str, top: int = 10) -> dict
         logging.error(f"Failed to fetch messages from {url}: {e}")
         return {"error": f"Failed to fetch messages from {url}"}
 
-def outlookMail_update_folder_display_name(folder_id: str, display_name: str) -> dict:
+def outlookMail_update_folder_display_name(
+        folder_id: str,
+        display_name: str
+) -> dict:
     """
     Update the display name of an Outlook mail folder.
 
@@ -245,7 +258,10 @@ def outlookMail_delete_folder(folder_id: str) -> dict:
         logging.error(f"Could not delete folder at {url}: {e}")
         return {"error": f"Could not delete folder at {url}"}
 
-def outlookMail_copy_folder(folder_id: str, destination_id: str) -> dict:
+def outlookMail_copy_folder(
+        folder_id: str,
+        destination_id: str
+) -> dict:
     """
     Copy an Outlook mail folder to another destination folder.
 
@@ -304,7 +320,10 @@ def outlookMail_get_folder_delta(max_pagesize: int = 2) -> dict:
         logging.error(f"Could not get folder delta from {url}: {e}")
         return {"error": f"Could not get folder delta from {url}"}
 
-def outlookMail_move_folder(folder_id: str, destination_id: str) -> dict:
+def outlookMail_move_folder(
+        folder_id: str,
+        destination_id: str
+) -> dict:
     """
     Move an Outlook mail folder to another folder.
 
@@ -335,7 +354,10 @@ def outlookMail_move_folder(folder_id: str, destination_id: str) -> dict:
         return {"error": f"Could not move Outlook mail folder at {url}"}
 
 
-def outlookMail_permanent_delete_folder(user_id: str, folder_id: str) -> dict:
+def outlookMail_permanent_delete_folder(
+        user_id: str,
+        folder_id: str
+) -> dict:
     """
     Permanently delete an Outlook mail folder for a user.
 
