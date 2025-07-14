@@ -35,6 +35,3 @@ def get_onedrive_client() -> Optional[dict]:
     except RuntimeError as e:
         logger.warning(f"Failed to get auth token: {e}")
         return None
-
-if __name__ == "__main__":
-    print(get_onedrive_client())

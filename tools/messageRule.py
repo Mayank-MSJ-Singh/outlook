@@ -1,6 +1,6 @@
 import requests
 import logging
-from base import get_onedrive_client
+from .base import get_onedrive_client
 
 # Configure logging
 logger = logging.getLogger(__name__)
