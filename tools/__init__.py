@@ -29,7 +29,6 @@ outlookMail_get_mail_folder,
 outlookMail_update_folder_display_name,
 outlookMail_get_folder_delta,
 outlookMail_create_child_folder,
-outlookMail_list_messages_from_folder,
 outlookMail_list_child_folders
 )
 
@@ -97,7 +96,6 @@ __all__ = [
     "outlookMail_update_folder_display_name",
     "outlookMail_get_folder_delta",
     "outlookMail_create_child_folder",
-    "outlookMail_list_messages_from_folder",
     "outlookMail_list_child_folders",
 
     #mailSearchFolder.py
@@ -130,5 +128,6 @@ __all__ = [
     "outlookMail_create_reply_draft",
     "outlookMail_delete_draft",
     "outlookMail_update_draft",
-    "outlookMail_create_forward_draft"
+    "outlookMail_create_forward_draft",
+    "outlookMail_list_messages_from_folder",
 ]
