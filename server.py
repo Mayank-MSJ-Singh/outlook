@@ -87,10 +87,10 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-ONEDRIVE_MCP_SERVER_PORT = int(os.getenv("ONEDRIVE_MCP_SERVER_PORT", "5000"))
+OUTLOOK_MCP_SERVER_PORT = int(os.getenv("OUTLOOK_MCP_SERVER_PORT", "5000"))
 
 @click.command()
-@click.option("--port", default=ONEDRIVE_MCP_SERVER_PORT, help="Port to listen on for HTTP")
+@click.option("--port", default=OUTLOOK_MCP_SERVER_PORT, help="Port to listen on for HTTP")
 @click.option(
     "--log-level",
     default="INFO",
@@ -413,6 +413,43 @@ def main(
                         }
                     },
                     "required": ["parent_folder_id", "display_name"]
+                }
+            ),
+            types.Tool(
+                name="outlookMail_get_folder_delta",
+                description="Get changes (delta) for all mail folders in the signed-in user's mailbox",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "max_pagesize": {
+                            "type": "integer",
+                            "description": "Max number of items per page",
+                            "default": 2,
+                            "minimum": 1,
+                            "maximum": 1000
+                        }
+                    },
+                    "additionalProperties": False
+                }
+            ),
+            types.Tool(
+                name="outlookMail_list_child_folders",
+                description="List child folders of a specific Outlook mail folder",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "folder_id": {
+                            "type": "string",
+                            "description": "ID of the parent folder"
+                        },
+                        "include_hidden": {
+                            "type": "boolean",
+                            "description": "Whether to include hidden folders",
+                            "default": False
+                        }
+                    },
+                    "required": ["folder_id"],
+                    "additionalProperties": False
                 }
             ),
 
@@ -1444,6 +1481,70 @@ def main(
                     "required": ["user_id", "message_id"],
                     "additionalProperties": False
                 }
+            ),
+            types.Tool(
+                name="outlookMail_create_draft",
+                description="Create a draft Outlook mail message using Microsoft Graph API (POST method)",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "subject": {
+                            "type": "string",
+                            "description": "Subject of the draft message"
+                        },
+                        "body_content": {
+                            "type": "string",
+                            "description": "HTML content of the message body"
+                        },
+                        "to_recipients": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            "description": "List of email addresses for the 'To' field"
+                        },
+                        "cc_recipients": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            "description": "List of email addresses for 'Cc'"
+                        },
+                        "bcc_recipients": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            "description": "List of email addresses for 'Bcc'"
+                        },
+                        "reply_to": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            "description": "List of email addresses for 'Reply-To'"
+                        },
+                        "importance": {
+                            "type": "string",
+                            "enum": ["Low", "Normal", "High"],
+                            "default": "Normal",
+                            "description": "Message importance level"
+                        },
+                        "categories": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "List of category strings (e.g., ['FollowUp', 'ProjectX'])"
+                        }
+                    },
+                    "required": ["subject", "body_content", "to_recipients"],
+                    "additionalProperties": False
+                }
             )
 
         ]
@@ -1833,6 +1934,49 @@ def main(
                         text=f"Error: {str(e)}",
                     )
                 ]
+        # Folder Delta and Child Folders Operations
+        elif name == "outlookMail_get_folder_delta":
+            try:
+                result = outlookMail_get_folder_delta(
+                    max_pagesize=arguments.get("max_pagesize", 2)
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error getting folder delta: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_list_child_folders":
+            try:
+                result = outlookMail_list_child_folders(
+                    folder_id=arguments["folder_id"],
+                    include_hidden=arguments.get("include_hidden", False)
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error listing child folders: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+
         # Mail Search Folder Operations
         elif name == "outlookMail_create_mail_search_folder":
             try:
@@ -2412,6 +2556,32 @@ def main(
                 ]
             except Exception as e:
                 logger.exception(f"Error permanently deleting message: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+        elif name == "outlookMail_create_draft":
+            try:
+                result = outlookMail_create_draft(
+                    subject=arguments["subject"],
+                    body_content=arguments["body_content"],
+                    to_recipients=arguments["to_recipients"],
+                    cc_recipients=arguments.get("cc_recipients"),
+                    bcc_recipients=arguments.get("bcc_recipients"),
+                    reply_to=arguments.get("reply_to"),
+                    importance=arguments.get("importance", "Normal"),
+                    categories=arguments.get("categories")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error creating draft message: {e}")
                 return [
                     types.TextContent(
                         type="text",
