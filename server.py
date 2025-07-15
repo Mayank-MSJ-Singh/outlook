@@ -1448,18 +1448,977 @@ def main(
 
         ]
 
+    @app.call_tool()
+    async def call_tool(
+            name: str,
+            arguments: dict
+    ) -> List[types.TextContent | types.ImageContent | types.EmbeddedResource]:
 
 
 
+        # Attachment Operations
+        if name == "outlookMail_add_attachment":
+            try:
+                result = outlookMail_add_attachment(
+                    message_id=arguments["message_id"],
+                    file_path=arguments["file_path"],
+                    attachment_name=arguments.get("attachment_name")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error adding attachment: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
 
+        elif name == "outlookMail_list_attachments":
+            try:
+                result = outlookMail_list_attachments(
+                    message_id=arguments["message_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error listing attachments: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
 
+        elif name == "outlookMail_get_attachment":
+            try:
+                result = outlookMail_get_attachment(
+                    message_id=arguments["message_id"],
+                    attachment_id=arguments["attachment_id"],
+                    expand=arguments.get("expand")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error getting attachment: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
 
+        elif name == "outlookMail_download_attachment":
+            try:
+                result = outlookMail_download_attachment(
+                    message_id=arguments["message_id"],
+                    attachment_id=arguments["attachment_id"],
+                    save_path=arguments["save_path"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error downloading attachment: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
 
+        elif name == "outlookMail_delete_attachment":
+            try:
+                result = outlookMail_delete_attachment(
+                    message_id=arguments["message_id"],
+                    attachment_id=arguments["attachment_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error deleting attachment: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
 
+        elif name == "outlookMail_upload_large_attachment":
+            try:
+                result = outlookMail_upload_large_attachment(
+                    message_id=arguments["message_id"],
+                    file_path=arguments["file_path"],
+                    is_inline=arguments.get("is_inline", False),
+                    content_id=arguments.get("content_id")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error uploading large attachment: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
 
+        # Focused Inbox Operations
+        elif name == "outlookMail_delete_inference_override":
+            try:
+                result = outlookMail_delete_inference_override(
+                    override_id=arguments["override_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error deleting inference override: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
 
+        elif name == "outlookMail_update_inference_override":
+            try:
+                result = outlookMail_update_inference_override(
+                    override_id=arguments["override_id"],
+                    classify_as=arguments.get("classify_as", "focused")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error updating inference override: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
 
-            #-------------------------------------------------------------------------
+        elif name == "outlookMail_list_inference_overrides":
+            try:
+                result = outlookMail_list_inference_overrides()
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error listing inference overrides: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+        # Mail Folder Operations
+        elif name == "outlookMail_delete_folder":
+            try:
+                result = outlookMail_delete_folder(
+                    folder_id=arguments["folder_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error deleting folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_create_mail_folder":
+            try:
+                result = outlookMail_create_mail_folder(
+                    display_name=arguments["display_name"],
+                    is_hidden=arguments.get("is_hidden", False)
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error creating mail folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_list_folders":
+            try:
+                result = outlookMail_list_folders(
+                    include_hidden=arguments.get("include_hidden", True)
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error listing folders: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_permanent_delete_folder":
+            try:
+                result = outlookMail_permanent_delete_folder(
+                    user_id=arguments["user_id"],
+                    folder_id=arguments["folder_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error permanently deleting folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_copy_folder":
+            try:
+                result = outlookMail_copy_folder(
+                    folder_id=arguments["folder_id"],
+                    destination_id=arguments["destination_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error copying folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_move_folder":
+            try:
+                result = outlookMail_move_folder(
+                    folder_id=arguments["folder_id"],
+                    destination_id=arguments["destination_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error moving folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_get_mail_folder":
+            try:
+                result = outlookMail_get_mail_folder(
+                    folder_id=arguments["folder_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error getting folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_update_folder_display_name":
+            try:
+                result = outlookMail_update_folder_display_name(
+                    folder_id=arguments["folder_id"],
+                    display_name=arguments["display_name"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error updating folder display name: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_create_child_folder":
+            try:
+                result = outlookMail_create_child_folder(
+                    parent_folder_id=arguments["parent_folder_id"],
+                    display_name=arguments["display_name"],
+                    is_hidden=arguments.get("is_hidden", False)
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error creating child folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+        # Mail Search Folder Operations
+        elif name == "outlookMail_create_mail_search_folder":
+            try:
+                result = outlookMail_create_mail_search_folder(
+                    parent_folder_id=arguments["parent_folder_id"],
+                    display_name=arguments["display_name"],
+                    include_nested_folders=arguments["include_nested_folders"],
+                    source_folder_ids=arguments["source_folder_ids"],
+                    filter_query=arguments["filter_query"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error creating search folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_get_mail_search_folder":
+            try:
+                result = outlookMail_get_mail_search_folder(
+                    folder_id=arguments["folder_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error getting search folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_update_mail_search_folder":
+            try:
+                result = outlookMail_update_mail_search_folder(
+                    folder_id=arguments["folder_id"],
+                    displayName=arguments.get("displayName"),
+                    includeNestedFolders=arguments.get("includeNestedFolders"),
+                    sourceFolderIds=arguments.get("sourceFolderIds"),
+                    filterQuery=arguments.get("filterQuery")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error updating search folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_delete_mail_search_folder":
+            try:
+                result = outlookMail_delete_mail_search_folder(
+                    folder_id=arguments["folder_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error deleting search folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_permanent_delete_mail_search_folder":
+            try:
+                result = outlookMail_permanent_delete_mail_search_folder(
+                    folder_id=arguments["folder_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error permanently deleting search folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_get_messages_from_folder":
+            try:
+                result = outlookMail_get_messages_from_folder(
+                    folder_id=arguments["folder_id"],
+                    top=arguments.get("top", 10),
+                    filter_query=arguments.get("filter_query"),
+                    orderby=arguments.get("orderby"),
+                    select=arguments.get("select")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error getting messages from folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        # Message Rule Operations
+        elif name == "outlookMail_list_inbox_rules":
+            try:
+                result = outlookMail_list_inbox_rules()
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error listing inbox rules: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_get_inbox_rule_by_id":
+            try:
+                result = outlookMail_get_inbox_rule_by_id(
+                    rule_id=arguments["rule_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error getting inbox rule: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_create_message_rule":
+            try:
+                result = outlookMail_create_message_rule(
+                    displayName=arguments["displayName"],
+                    sequence=arguments["sequence"],
+                    isEnabled=arguments.get("isEnabled", True),
+                    conditions=arguments.get("conditions"),
+                    actions=arguments["actions"],
+                    exceptions=arguments.get("exceptions")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error creating message rule: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_update_message_rule":
+            try:
+                result = outlookMail_update_message_rule(
+                    rule_id=arguments["rule_id"],
+                    displayName=arguments.get("displayName"),
+                    sequence=arguments.get("sequence"),
+                    isEnabled=arguments.get("isEnabled"),
+                    actions=arguments.get("actions"),
+                    conditions=arguments.get("conditions"),
+                    exceptions=arguments.get("exceptions")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error updating message rule: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_delete_message_rule":
+            try:
+                result = outlookMail_delete_message_rule(
+                    rule_id=arguments["rule_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error deleting message rule: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+        # Message Operations
+        elif name == "outlookMail_list_messages":
+            try:
+                result = outlookMail_list_messages(
+                    top=arguments.get("top", 10),
+                    filter_query=arguments.get("filter_query"),
+                    orderby=arguments.get("orderby"),
+                    select=arguments.get("select")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error listing messages: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_list_messages_from_folder":
+            try:
+                result = outlookMail_list_messages_from_folder(
+                    folder_id=arguments["folder_id"],
+                    top=arguments.get("top", 10),
+                    filter_query=arguments.get("filter_query"),
+                    orderby=arguments.get("orderby"),
+                    select=arguments.get("select")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error listing messages from folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_create_draft_in_folder":
+            try:
+                result = outlookMail_create_draft_in_folder(
+                    folder_id=arguments["folder_id"],
+                    subject=arguments["subject"],
+                    body_content=arguments["body_content"],
+                    to_recipients=arguments["to_recipients"],
+                    cc_recipients=arguments.get("cc_recipients"),
+                    bcc_recipients=arguments.get("bcc_recipients"),
+                    reply_to=arguments.get("reply_to"),
+                    importance=arguments.get("importance", "Normal"),
+                    categories=arguments.get("categories")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error creating draft in folder: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_update_draft":
+            try:
+                result = outlookMail_update_draft(
+                    message_id=arguments["message_id"],
+                    subject=arguments.get("subject"),
+                    body_content=arguments.get("body_content"),
+                    to_recipients=arguments.get("to_recipients"),
+                    cc_recipients=arguments.get("cc_recipients"),
+                    bcc_recipients=arguments.get("bcc_recipients"),
+                    reply_to=arguments.get("reply_to"),
+                    importance=arguments.get("importance"),
+                    internet_message_id=arguments.get("internet_message_id"),
+                    is_delivery_receipt_requested=arguments.get("is_delivery_receipt_requested"),
+                    is_read=arguments.get("is_read"),
+                    is_read_receipt_requested=arguments.get("is_read_receipt_requested"),
+                    categories=arguments.get("categories"),
+                    inference_classification=arguments.get("inference_classification"),
+                    flag=arguments.get("flag"),
+                    from_sender=arguments.get("from_sender"),
+                    sender=arguments.get("sender")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error updating draft: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+        # Message Operations
+        elif name == "outlookMail_delete_draft":
+            try:
+                result = outlookMail_delete_draft(
+                    message_id=arguments["message_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error deleting draft: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_copy_message":
+            try:
+                result = outlookMail_copy_message(
+                    message_id=arguments["message_id"],
+                    destination_folder_id=arguments["destination_folder_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error copying message: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_create_forward_draft":
+            try:
+                result = outlookMail_create_forward_draft(
+                    message_id=arguments["message_id"],
+                    comment=arguments["comment"],
+                    to_recipients=arguments["to_recipients"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error creating forward draft: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_create_reply_draft":
+            try:
+                result = outlookMail_create_reply_draft(
+                    message_id=arguments["message_id"],
+                    comment=arguments["comment"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error creating reply draft: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_create_reply_all_draft":
+            try:
+                result = outlookMail_create_reply_all_draft(
+                    message_id=arguments["message_id"],
+                    comment=arguments.get("comment", "")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error creating reply-all draft: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_forward_message":
+            try:
+                result = outlookMail_forward_message(
+                    message_id=arguments["message_id"],
+                    to_recipients=arguments["to_recipients"],
+                    comment=arguments.get("comment", "")
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error forwarding message: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_move_message":
+            try:
+                result = outlookMail_move_message(
+                    message_id=arguments["message_id"],
+                    destination_folder_id=arguments["destination_folder_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error moving message: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_send_reply_custom":
+            try:
+                result = outlookMail_send_reply_custom(
+                    message_id=arguments["message_id"],
+                    comment=arguments["comment"],
+                    to_recipients=arguments["to_recipients"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error sending custom reply: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_reply_all":
+            try:
+                result = outlookMail_reply_all(
+                    message_id=arguments["message_id"],
+                    comment=arguments["comment"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error replying to all: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_send_draft":
+            try:
+                result = outlookMail_send_draft(
+                    message_id=arguments["message_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error sending draft: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+
+        elif name == "outlookMail_permanent_delete":
+            try:
+                result = outlookMail_permanent_delete(
+                    user_id=arguments["user_id"],
+                    message_id=arguments["message_id"]
+                )
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2),
+                    )
+                ]
+            except Exception as e:
+                logger.exception(f"Error permanently deleting message: {e}")
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Error: {str(e)}",
+                    )
+                ]
+    #-------------------------------------------------------------------------
 
     # Set up SSE transport
     sse = SseServerTransport("/messages/")
